@@ -11,23 +11,22 @@
 ══════════════════════════════════════ */
 :root {
   /* Color Palette — Light Mode */
-  --c-bg:          #f8fafc;
-  --c-surface:     #ffffff;
-  --c-surface-2:   #f1f5f9;
-  --c-border:      #e2e8f0;
-  --c-border-subtle: rgba(148, 163, 184, 0.2);
+  --c-bg:            #f8fafc;
+--c-surface:       #ffffff;
+--c-surface-2:     #f1f5f9;
+--c-border:        #e2e8f0;
+--c-border-subtle: rgba(148, 163, 184, 0.2);
 
-  --c-text:        #0f172a;
-  --c-text-2:      #475569;
-  --c-text-3:      #94a3b8;
+--c-text:          #0f172a;
+--c-text-2:        #475569;
+--c-text-3:        #94a3b8;
 
-  --c-accent:      #4f6ef7;
-  --c-accent-soft: #eef2ff;
-  --c-accent-hover:#3b5bf6;
+--c-accent:        #074875;
+--c-accent-soft:   #E8F4F5;
+--c-accent-hover:  #074875;
 
-  --c-green:       #10b981;
-  --c-green-soft:  #d1fae5;
-
+--c-green:         #23A4A2;
+--c-green-soft:    #E4F5F1;
   /* Shadows — soft, multi-layer */
   --shadow-xs:  0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-sm:  0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -1588,6 +1587,35 @@ ul, ol { list-style: none; }
   max-width: 52rem;
   margin-bottom: var(--sp-6);
 }
+.bilgi-featured-desc-kisa {
+  font-size: 1.5rem;
+  color: var(--c-text-2);
+  line-height: 1.7;
+  max-width: 52rem;
+  margin-bottom: var(--sp-6);
+  display: -webkit-box;
+  -webkit-line-clamp: 4; 
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 7rem; 
+  opacity: 0.9;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+.bilgi-featured-desc-uzun {
+  font-size: 1.5rem;
+  color: var(--c-text-2);
+  line-height: 1.7;
+  max-width: 52rem;
+  margin-bottom: var(--sp-6);
+  display: block; 
+  overflow: hidden; 
+  max-height: 190rem; 
+  opacity: 1;
+  transition: max-height 0.5s ease-in-out, opacity 0.4s ease;
+}
+
 .robot-tag-row {
   display: flex;
   flex-wrap: wrap;
@@ -2151,4 +2179,127 @@ ul, ol { list-style: none; }
 }
 .contact-link-item:hover {
   transform: translateX(3px);
+}
+/* ══════════════════════════════════════
+   ATATÜRK KÖŞESİ — Premium Minimal
+══════════════════════════════════════ */
+
+.ataturk-section {
+  padding: var(--sp-20) var(--sp-12);
+  max-width: 96rem;
+  margin: 0 auto;
+}
+
+.ataturk-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 3.2rem;
+  align-items: start;
+}
+
+/* Quote Card — Sol taraf */
+.ataturk-quote {
+  position: sticky;
+  top: 4rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-left: 4px solid var(--c-accent);
+  border-radius: var(--r-lg);
+  padding: 3.2rem 2.8rem;
+  box-shadow: var(--shadow-md);
+  transition: all var(--t-normal);
+}
+
+.ataturk-quote:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--c-accent);
+}
+
+.ataturk-quote blockquote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 2.6rem;
+  line-height: 1.3;
+  color: var(--c-text);
+  margin: 0;
+}
+
+.ataturk-quote figcaption {
+  margin-top: 1.8rem;
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  color: var(--c-accent);
+  letter-spacing: 0.04em;
+}
+
+/* Metin kısmı — Sağ taraf */
+.ataturk-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.ataturk-body p {
+  font-size: 1.7rem;
+  line-height: 1.85;
+  color: var(--c-text-2);
+  margin: 0;
+}
+
+.ataturk-body p::first-letter {
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.ataturk-sign {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 2.2rem;
+  color: var(--c-text);
+  margin-top: 0.8rem;
+  letter-spacing: -0.02em;
+}
+
+/* ── Responsive ─────────────────────── */
+@media (max-width: 900px) {
+  .ataturk-grid {
+    grid-template-columns: 1fr;
+    gap: 2.4rem;
+  }
+
+  .ataturk-quote {
+    position: static;
+    top: unset;
+  }
+
+  .ataturk-quote blockquote {
+    font-size: 2.2rem;
+  }
+
+  .ataturk-section {
+    padding: var(--sp-12) var(--sp-8);
+  }
+}
+
+@media (max-width: 600px) {
+  .ataturk-section {
+    padding: var(--sp-8) var(--sp-5);
+  }
+
+  .ataturk-quote {
+    padding: 2.4rem 2rem;
+  }
+
+  .ataturk-quote blockquote {
+    font-size: 1.8rem;
+  }
+
+  .ataturk-body p {
+    font-size: 1.5rem;
+    line-height: 1.75;
+  }
+
+  .ataturk-sign {
+    font-size: 1.8rem;
+  }
 }

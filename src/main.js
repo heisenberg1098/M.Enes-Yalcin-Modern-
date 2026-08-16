@@ -1,10 +1,5 @@
-/* ═══════════════════════════════════════════════
-   main.js — M.Enes Yalçın Portfolio
-   Refactored: modern, modular, production-ready
-   v2.0 — Toast · CMS CRUD · Error Handling · Status System
-   ════════════════════════════════════════════ */
 
-// ─── 1. FIREBASE INIT ────────────────────────────
+
 if (typeof firebaseConfig === 'undefined') {
   var firebaseConfig = {
     apiKey: "AIzaSyBhTD31NWAq6DlnUQPwRcC4Q_-l-pNi1xs",
@@ -28,14 +23,14 @@ const db = firebase.firestore();
 const Toast = (() => {
   const ICONS = {
     success: 'fa-check-circle',
-    error:   'fa-exclamation-circle',
-    info:    'fa-circle-info',
+    error: 'fa-exclamation-circle',
+    info: 'fa-circle-info',
     warning: 'fa-triangle-exclamation'
   };
   const TITLES = {
     success: 'Başarılı',
-    error:   'Hata',
-    info:    'Bilgi',
+    error: 'Hata',
+    info: 'Bilgi',
     warning: 'Uyarı'
   };
   const DURATION = { success: 4000, info: 4000, warning: 5000, error: 6000 };
@@ -73,8 +68,8 @@ const Toast = (() => {
 
   return {
     success: (msg, title) => show(msg, 'success', title),
-    error:   (msg, title) => show(msg, 'error', title),
-    info:    (msg, title) => show(msg, 'info', title),
+    error: (msg, title) => show(msg, 'error', title),
+    info: (msg, title) => show(msg, 'info', title),
     warning: (msg, title) => show(msg, 'warning', title),
   };
 })();
@@ -94,7 +89,7 @@ const OfflineManager = (() => {
       }
     }
 
-    window.addEventListener('online',  update);
+    window.addEventListener('online', update);
     window.addEventListener('offline', update);
     update();
   }
@@ -143,9 +138,9 @@ const SidebarManager = (() => {
     if (!_sidebar) return;
     // Scroll lock: position fix trick (prevents background jump on iOS)
     _scrollY = window.scrollY;
-    document.body.style.position  = 'fixed';
-    document.body.style.top       = `-${_scrollY}px`;
-    document.body.style.width     = '100%';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${_scrollY}px`;
+    document.body.style.width = '100%';
     document.body.style.overflowY = 'scroll'; // prevent layout shift
 
     _sidebar.classList.add('open');
@@ -155,9 +150,9 @@ const SidebarManager = (() => {
   function close() {
     if (!_sidebar) return;
     // Restore scroll position
-    document.body.style.position  = '';
-    document.body.style.top       = '';
-    document.body.style.width     = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
     document.body.style.overflowY = '';
     window.scrollTo(0, _scrollY || 0);
 
@@ -254,7 +249,7 @@ const WebsiteLoader = (() => {
     const site = doc.data();
     if (site.font) {
       const link = document.createElement('link');
-      link.rel  = 'stylesheet';
+      link.rel = 'stylesheet';
       link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(site.font)}&display=swap`;
       document.head.appendChild(link);
     }
@@ -269,12 +264,12 @@ const WebsiteLoader = (() => {
     card.dataset.docId = doc.id;
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    
+
     card.addEventListener('click', () => {
       tiklaniSayisiArtir(doc.id, site.isim);
       window.open(site.link, '_blank', 'noopener,noreferrer');
     });
-    
+
     card.addEventListener('keydown', e => {
       if (e.key === 'Enter') card.click();
     });
@@ -324,7 +319,7 @@ const WebsiteLoader = (() => {
           querySnapshot.forEach(doc => {
             const d = doc.data();
             const status = d.status || 'active';
-            
+
             // Sadece aktif yayında olanları VEYA senin geliştirme aşamasında (development) bıraktığın siteleri vitrinde gösteriyoruz.
             // Taslak (draft) ve Arşivlenmiş (archived) siteler ana sayfada gizlenir.
             if (status === 'active' || status === 'development' || d.isPublished === true) {
@@ -343,13 +338,12 @@ const WebsiteLoader = (() => {
 
           activeDocs.forEach(doc => renderCard(doc, container));
 
-          // Premium Fade-in Giriş Animasyonu (Sonsuz döngü yaratan viewObserver kaldırıldı)
           container.querySelectorAll('.web-card').forEach((card, i) => {
-            card.style.opacity   = '0';
+            card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
             card.style.transition = `opacity 0.4s ease ${i * 0.08}s, transform 0.4s ease ${i * 0.08}s`;
             requestAnimationFrame(() => setTimeout(() => {
-              card.style.opacity   = '1';
+              card.style.opacity = '1';
               card.style.transform = 'translateY(0)';
             }, 50));
           });
@@ -376,7 +370,6 @@ const WebsiteLoader = (() => {
   return { load };
 })();
 
-// Expose for retry button onclick (global scope, minimal)
 window.WebsiteLoader = WebsiteLoader;
 
 async function tiklaniSayisiArtir(docId, projeAdi) {
@@ -385,7 +378,6 @@ async function tiklaniSayisiArtir(docId, projeAdi) {
       tiklanmaSayisi: firebase.firestore.FieldValue.increment(1),
       clicks: firebase.firestore.FieldValue.increment(1)
     });
-    // Analytics event
     if (typeof Analytics !== 'undefined') {
       Analytics.track('proje_tikla', {
         event_category: 'portfolio',
@@ -413,7 +405,7 @@ async function goruntulenmeSayisiArtir(docId) {
 function showFormNotification(el, message, type) {
   if (!el) return;
   el.textContent = message;
-  el.className   = `form-notification ${type}`;
+  el.className = `form-notification ${type}`;
   el.style.display = 'block';
   setTimeout(() => { el.style.display = 'none'; }, 5000);
 }
@@ -437,19 +429,19 @@ async function adminGirisKontrol() {
       document.getElementById('adminModal').style.display = 'none';
       document.getElementById('pSifre').value = '';
       const panel = document.getElementById('adminPanel');
-      panel.style.display        = 'flex';
-      panel.style.flexDirection  = 'column';
+      panel.style.display = 'flex';
+      panel.style.flexDirection = 'column';
       adminMesajlariYukle();
       adminProjeleriYukle();
     } else {
       const input = document.getElementById('pSifre');
       input.style.borderColor = '#ef4444';
-      input.style.animation   = 'shake 0.4s ease';
+      input.style.animation = 'shake 0.4s ease';
       Toast.error('Yanlış şifre. Tekrar deneyin.', 'Giriş Başarısız');
       setTimeout(() => {
         input.style.borderColor = '';
-        input.style.animation   = '';
-        input.value  = '';
+        input.style.animation = '';
+        input.value = '';
         input.focus();
       }, 500);
     }
@@ -485,15 +477,15 @@ function siteEkleFormHazirla() {
 
     const status = document.getElementById('sStatus')?.value || 'active';
     const yeniSite = {
-      isim:        document.getElementById('sAd').value.trim(),
-      link:        document.getElementById('sLink').value.trim(),
-      font:        document.getElementById('sFont').value.trim(),
-      aciklama:    document.getElementById('sAciklama').value.trim(),
-      resim:       document.getElementById('sResim')?.value.trim() || '',
-      tags:        document.getElementById('sTags')?.value.trim() || '',
-      status:      status,
+      isim: document.getElementById('sAd').value.trim(),
+      link: document.getElementById('sLink').value.trim(),
+      font: document.getElementById('sFont').value.trim(),
+      aciklama: document.getElementById('sAciklama').value.trim(),
+      resim: document.getElementById('sResim')?.value.trim() || '',
+      tags: document.getElementById('sTags')?.value.trim() || '',
+      status: status,
       isPublished: status === 'active',
-      tarih:       firebase.firestore.FieldValue.serverTimestamp()
+      tarih: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
@@ -505,7 +497,7 @@ function siteEkleFormHazirla() {
       setTimeout(() => switchAdminTab('projects'), 800);
       setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-rocket"></i> Siteyi Yayınla';
-        btn.disabled  = false;
+        btn.disabled = false;
       }, 2000);
     } catch (err) {
       console.error("Site ekleme hatası:", err);
@@ -513,7 +505,7 @@ function siteEkleFormHazirla() {
       Toast.error('Proje eklenemedi. Tekrar deneyin.', 'Ekleme Hatası');
       setTimeout(() => {
         btn.innerHTML = '<i class="fas fa-rocket"></i> Siteyi Yayınla';
-        btn.disabled  = false;
+        btn.disabled = false;
       }, 2000);
     }
   };
@@ -521,10 +513,10 @@ function siteEkleFormHazirla() {
 
 // ─── 12. ADMIN: PROJECT MANAGEMENT (CMS CRUD) ────
 const STATUS_LABELS = {
-  active:      { label: 'Yayında',     cls: 'active' },
-  draft:       { label: 'Taslak',      cls: 'draft' },
-  archived:    { label: 'Arşiv',       cls: 'archived' },
-  development: { label: 'Geliştirme',  cls: 'development' }
+  active: { label: 'Yayında', cls: 'active' },
+  draft: { label: 'Taslak', cls: 'draft' },
+  archived: { label: 'Arşiv', cls: 'archived' },
+  development: { label: 'Geliştirme', cls: 'development' }
 };
 
 function adminProjeleriYukle() {
@@ -537,13 +529,13 @@ function adminProjeleriYukle() {
     snapshot.forEach(doc => {
       total++;
       const s = doc.data().status || 'active';
-      if (s === 'active')      active++;
-      else if (s === 'draft')  draft++;
+      if (s === 'active') active++;
+      else if (s === 'draft') draft++;
     });
     const el = id => document.getElementById(id);
-    if (el('statTotal'))  el('statTotal').textContent  = total;
+    if (el('statTotal')) el('statTotal').textContent = total;
     if (el('statActive')) el('statActive').textContent = active;
-    if (el('statDraft'))  el('statDraft').textContent  = draft;
+    if (el('statDraft')) el('statDraft').textContent = draft;
 
     // Render list
     liste.innerHTML = '';
@@ -553,9 +545,9 @@ function adminProjeleriYukle() {
     }
 
     snapshot.forEach(doc => {
-      const p      = doc.data();
+      const p = doc.data();
       const status = p.status || 'active';
-      const sInfo  = STATUS_LABELS[status] || STATUS_LABELS.active;
+      const sInfo = STATUS_LABELS[status] || STATUS_LABELS.active;
 
       const item = document.createElement('div');
       item.className = 'admin-project-item';
@@ -570,13 +562,13 @@ function adminProjeleriYukle() {
             <i class="fas fa-pen"></i> Düzenle
           </button>
           ${status !== 'active'
-            ? `<button class="admin-action-btn btn-publish" onclick="projeYayinla('${doc.id}')">
+          ? `<button class="admin-action-btn btn-publish" onclick="projeYayinla('${doc.id}')">
                 <i class="fas fa-eye"></i> Yayına Al
                </button>`
-            : `<button class="admin-action-btn btn-unpublish" onclick="projeYayindanKaldir('${doc.id}')">
+          : `<button class="admin-action-btn btn-unpublish" onclick="projeYayindanKaldir('${doc.id}')">
                 <i class="fas fa-eye-slash"></i> Yayından Kaldır
                </button>`
-          }
+        }
           <button class="admin-action-btn btn-delete" onclick="projeSil('${doc.id}', '${escapeHtml(p.isim || '')}')">
             <i class="fas fa-trash"></i> Sil
           </button>
@@ -634,14 +626,14 @@ async function projeEdit(id) {
       return;
     }
     const p = doc.data();
-    document.getElementById('editDocId').value       = id;
-    document.getElementById('editAd').value          = p.isim || '';
-    document.getElementById('editLink').value        = p.link || '';
-    document.getElementById('editFont').value        = p.font || '';
-    document.getElementById('editTags').value        = p.tags || '';
-    document.getElementById('editAciklama').value    = p.aciklama || '';
-    document.getElementById('editResim').value       = p.resim || '';
-    document.getElementById('editStatus').value      = p.status || 'active';
+    document.getElementById('editDocId').value = id;
+    document.getElementById('editAd').value = p.isim || '';
+    document.getElementById('editLink').value = p.link || '';
+    document.getElementById('editFont').value = p.font || '';
+    document.getElementById('editTags').value = p.tags || '';
+    document.getElementById('editAciklama').value = p.aciklama || '';
+    document.getElementById('editResim').value = p.resim || '';
+    document.getElementById('editStatus').value = p.status || 'active';
     editModalAc();
   } catch (err) {
     console.error(err);
@@ -663,22 +655,22 @@ function editFormHazirla() {
 
   form.onsubmit = async (e) => {
     e.preventDefault();
-    const id   = document.getElementById('editDocId').value;
-    const btn  = form.querySelector('[type="submit"]');
+    const id = document.getElementById('editDocId').value;
+    const btn = form.querySelector('[type="submit"]');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Kaydediliyor…';
 
     const status = document.getElementById('editStatus').value;
     const guncelleme = {
-      isim:        document.getElementById('editAd').value.trim(),
-      link:        document.getElementById('editLink').value.trim(),
-      font:        document.getElementById('editFont').value.trim(),
-      tags:        document.getElementById('editTags').value.trim(),
-      aciklama:    document.getElementById('editAciklama').value.trim(),
-      resim:       document.getElementById('editResim').value.trim(),
-      status:      status,
+      isim: document.getElementById('editAd').value.trim(),
+      link: document.getElementById('editLink').value.trim(),
+      font: document.getElementById('editFont').value.trim(),
+      tags: document.getElementById('editTags').value.trim(),
+      aciklama: document.getElementById('editAciklama').value.trim(),
+      resim: document.getElementById('editResim').value.trim(),
+      status: status,
       isPublished: status === 'active',
-      guncelleme:  firebase.firestore.FieldValue.serverTimestamp()
+      guncelleme: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     try {
@@ -696,10 +688,10 @@ function editFormHazirla() {
 }
 
 // Global expose for onclick attributes
-window.projeEdit           = projeEdit;
-window.projeYayinla        = projeYayinla;
+window.projeEdit = projeEdit;
+window.projeYayinla = projeYayinla;
 window.projeYayindanKaldir = projeYayindanKaldir;
-window.projeSil            = projeSil;
+window.projeSil = projeSil;
 
 // ─── 13. ADMIN: LIST & DELETE MESSAGES ───────────
 function adminMesajlariYukle() {
@@ -768,9 +760,9 @@ function switchAdminTab(tab) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
 
-  const tabEl  = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+  const tabEl = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
   const viewEl = document.getElementById(`view${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-  if (tabEl)  tabEl.classList.add('active');
+  if (tabEl) tabEl.classList.add('active');
   if (viewEl) viewEl.classList.add('active');
 }
 window.switchAdminTab = switchAdminTab;
@@ -779,11 +771,11 @@ window.switchAdminTab = switchAdminTab;
 function escapeHtml(str) {
   if (str == null) return '';
   return String(str)
-    .replace(/&/g,  '&amp;')
-    .replace(/</g,  '&lt;')
-    .replace(/>/g,  '&gt;')
-    .replace(/"/g,  '&quot;')
-    .replace(/'/g,  '&#039;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // ─── 16A. ANALYTICS MANAGER ──────────────────────
@@ -850,13 +842,13 @@ const CloudinaryUpload = (() => {
   }
 
   function showLoading() {
-    document.getElementById('uploadIdle').style.display    = 'none';
+    document.getElementById('uploadIdle').style.display = 'none';
     document.getElementById('uploadLoading').style.display = 'flex';
     document.getElementById('uploadPreview').style.display = 'none';
   }
 
   function showPreview(url) {
-    document.getElementById('uploadIdle').style.display    = 'none';
+    document.getElementById('uploadIdle').style.display = 'none';
     document.getElementById('uploadLoading').style.display = 'none';
     const preview = document.getElementById('uploadPreview');
     document.getElementById('uploadPreviewImg').src = url;
@@ -864,7 +856,7 @@ const CloudinaryUpload = (() => {
   }
 
   function showIdle() {
-    document.getElementById('uploadIdle').style.display    = 'flex';
+    document.getElementById('uploadIdle').style.display = 'flex';
     document.getElementById('uploadLoading').style.display = 'none';
     document.getElementById('uploadPreview').style.display = 'none';
   }
@@ -893,17 +885,17 @@ const CloudinaryUpload = (() => {
 })();
 
 // Global functions for inline onclick attributes
-window.cloudinaryTikla = function() {
+window.cloudinaryTikla = function () {
   document.getElementById('cloudinaryFileInput')?.click();
 };
 
-window.cloudinaryUpload = async function(file) {
+window.cloudinaryUpload = async function (file) {
   if (!file) return;
   CloudinaryUpload.showLoading();
   try {
     const url = await CloudinaryUpload.upload(file);
     // Save URL to hidden field
-    document.getElementById('sResim').value    = url;
+    document.getElementById('sResim').value = url;
     document.getElementById('sResimUrl').value = url;
     CloudinaryUpload.showPreview(url);
     Toast.success('Görsel başarıyla yüklendi!', 'Yükleme Başarılı');
@@ -915,43 +907,41 @@ window.cloudinaryUpload = async function(file) {
   }
 };
 
-window.uploadTemizle = function(e) {
+window.uploadTemizle = function (e) {
   e.stopPropagation();
-  document.getElementById('sResim').value    = '';
+  document.getElementById('sResim').value = '';
   document.getElementById('sResimUrl').value = '';
   document.getElementById('cloudinaryFileInput').value = '';
   CloudinaryUpload.showIdle();
 };
 
-// ─── 16C. BRANDING TYPEWRITER ANIMATION ──────────
 const BrandingAnimation = (() => {
   const PHRASES = [
     'M. Enes Yalçın',
-    'Full Stack Dev',
-    'AI Systems',
-    'Building Digital Systems',
+    'Heisenberg',
+    'Yazılımcı',
+    'Siber Güvenlik',
     'M. Enes Yalçın',
   ];
 
-  // Timing (ms) — premium, unhurried feel
-  const TYPE_SPEED_MIN  = 55;
-  const TYPE_SPEED_MAX  = 95;
-  const DELETE_SPEED    = 38;
+  const TYPE_SPEED_MIN = 55;
+  const TYPE_SPEED_MAX = 95;
+  const DELETE_SPEED = 38;
   const PAUSE_AFTER_TYPE = 2600;
-  const PAUSE_AFTER_DEL  = 420;
+  const PAUSE_AFTER_DEL = 420;
 
   let currentIndex = 0;
-  let charIndex     = 0;
-  let isDeleting    = false;
-  let timeoutId     = null;
+  let charIndex = 0;
+  let isDeleting = false;
+  let timeoutId = null;
 
   function getRand(min, max) {
     return Math.random() * (max - min) + min;
   }
 
   function tick(el) {
-    const phrase   = PHRASES[currentIndex];
-    const current  = phrase.substring(0, charIndex);
+    const phrase = PHRASES[currentIndex];
+    const current = phrase.substring(0, charIndex);
     el.childNodes[0]?.nodeType === Node.TEXT_NODE
       ? (el.childNodes[0].textContent = current)
       : (el.insertBefore(document.createTextNode(current), el.firstChild));
@@ -1000,8 +990,8 @@ function iletisimFormuHazirla() {
   const form = document.getElementById('iletisimForm');
   if (!form) return;
 
-  const btn       = document.getElementById('mesajGonderBtn');
-  const idleEl    = btn?.querySelector('.btn-send-idle');
+  const btn = document.getElementById('mesajGonderBtn');
+  const idleEl = btn?.querySelector('.btn-send-idle');
   const loadingEl = btn?.querySelector('.btn-send-loading');
   const successEl = btn?.querySelector('.btn-send-success');
 
@@ -1033,9 +1023,9 @@ function iletisimFormuHazirla() {
     setState('loading');
 
     const mesajVerisi = {
-      isim:  document.getElementById('isim').value.trim(),
+      isim: document.getElementById('isim').value.trim(),
       email: document.getElementById('email').value.trim(),
-      konu:  document.getElementById('konu').value.trim(),
+      konu: document.getElementById('konu').value.trim(),
       mesaj: document.getElementById('mesaj').value.trim(),
       tarih: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -1062,6 +1052,8 @@ function iletisimFormuHazirla() {
   });
 }
 
+
+
 // ─── 16. INIT ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
@@ -1072,6 +1064,7 @@ document.addEventListener('DOMContentLoaded', () => {
   OfflineManager.init();
 
   WebsiteLoader.load();
+  BilgilendirmeLoader.load();
   iletisimFormuHazirla();
   siteEkleFormHazirla();
   editFormHazirla();
@@ -1079,13 +1072,11 @@ document.addEventListener('DOMContentLoaded', () => {
   BrandingAnimation.init();
   Analytics.init();
 
-  // Password field Enter key
   const pSifre = document.getElementById('pSifre');
   if (pSifre) pSifre.addEventListener('keydown', e => {
     if (e.key === 'Enter') adminGirisKontrol();
   });
 
-  // Close admin login modal on Escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       document.getElementById('adminModal').style.display = 'none';
@@ -1093,3 +1084,86 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+
+var yaysite = document.getElementById("yayınlanmissite");
+db.collection("websiteler").where("isPublished", "==", true).get().then((querySnapshot) => {
+  const count = querySnapshot.size;
+  yaysite.innerHTML = count;
+});
+
+var sitegor = document.getElementById("sitegoruntulenme");
+db.collection("websiteler").where("isPublished", "==", true).get().then((querySnapshot) => {
+  const count = querySnapshot.docs.reduce((total, doc) => total + (doc.data().views || 0), 0);
+  sitegor.innerHTML = count;
+});
+
+
+
+const BilgilendirmeLoader = (() => {
+
+  function load() {
+    const BilgiGor = document.getElementById("bilgilendirmeContainer");
+
+    if (!BilgiGor) return; 
+
+    db.collection("Bilgilendirme").onSnapshot(snapshot => {
+      let toplam = 0;
+      let htmlIcerik = ""; 
+
+      const el = id => document.getElementById(id);
+
+      // Veri yoksa yapılacaklar
+      if (snapshot.empty) {
+        BilgiGor.innerHTML = '<p style="color:var(--c-text-2); font-size:1.4rem; text-align:center; padding: 2rem;">Henüz Bilgi eklenmemiş.</p>';
+        if (el('statTotal')) el('statTotal').textContent = 0;
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        toplam++;
+        
+        const veri = doc.data(); 
+
+        htmlIcerik += `
+<div class="robot-featured in-view" data-animate> 
+    <div class="robot-featured-content"> 
+        <div class="robot-featured-label"> 
+            <i class="fas fa-virus"></i> Yazılım
+        </div> 
+        <h3 class="robot-featured-title"> ${veri.baslik || 'Başlık Yok'} </h3> 
+        <p id="bilgiicerik" class="bilgi-featured-desc-kisa"> ${veri.uzunAciklama || ''}  </p><span class="devamigorBtn" onclick="devamigor(this)" style="cursor:pointer; color:var(--c-primary, #0066ff); font-weight:600; display:inline-block; margin-bottom:1rem;">Devamını Göster</span> 
+        <div class="robot-tag-row"> 
+            <span class="robot-tag">${veri.tag1 || 'Bilgi'}</span> 
+            <span class="robot-tag">${veri.tag2 || 'Yazılım'}</span> 
+        </div> 
+    </div> 
+</div>`;
+      });
+
+      BilgiGor.innerHTML = htmlIcerik;
+
+    });
+  }
+
+  return {
+    load
+  };
+})();
+
+function devamigor(tikananSpan) {
+  const aciklamaP = tikananSpan.previousElementSibling;
+  
+  if (!aciklamaP) return;
+
+  if (aciklamaP.classList.contains("bilgi-featured-desc-kisa")) {
+    aciklamaP.classList.remove("bilgi-featured-desc-kisa");
+    aciklamaP.classList.add("bilgi-featured-desc-uzun");
+    tikananSpan.innerHTML = "Daha Az Göster";
+  } else {
+    aciklamaP.classList.remove("bilgi-featured-desc-uzun");
+    aciklamaP.classList.add("bilgi-featured-desc-kisa");
+    tikananSpan.innerHTML = "Devamını Göster";
+  }
+}
+

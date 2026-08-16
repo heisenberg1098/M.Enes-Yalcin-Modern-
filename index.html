@@ -4,54 +4,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>M.Enes Yalçın — Full Stack & AI Systems Developer</title>
+  <title>M.Enes Yalçın — Yazılım Geliştirici </title>
   <link rel="icon" type="image/png" href="assets/img/ME.png" />
 
-  <!-- Fonts: Satoshi + DM Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap"
+    rel="stylesheet" />
 
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
 
   <link rel="stylesheet" href="assets/css/main.css" />
 
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-CD6BHPV51M"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-CD6BHPV51M', { send_page_view: true });
   </script>
 </head>
 
 <body>
-  <!-- ═══════════════════════════════════════
-       SIDEBAR / HEADER
-  ════════════════════════════════════════ -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
 
-      <!-- Logo / Avatar -->
       <div class="sidebar-avatar" onclick="adminPopUpAc()">
         <div class="avatar-ring">
           <img src="assets/img/Ben.png" alt="M.Enes Yalçın" />
         </div>
         <div class="avatar-meta">
           <span class="avatar-name" id="brandingText" aria-live="polite">M. Enes Yalçın</span>
-          <span class="avatar-role">Software & AI Developer</span>
+          <span class="avatar-role">Yazılım Geliştirici</span>
         </div>
       </div>
 
-      <!-- Status Badge -->
       <div class="status-badge">
         <span class="status-dot"></span>
         Projeye açık
       </div>
 
-      <!-- Navigation -->
       <nav class="sidebar-nav" role="navigation">
         <a href="#home" class="nav-link active" data-section="home">
           <i class="fas fa-house"></i>
@@ -73,22 +66,32 @@
           <i class="fas fa-globe"></i>
           <span>Web Siteleri</span>
         </a>
+        <a href="#egitim" class="nav-link" data-section="egitim">
+          <i class="fas fa-graduation-cap"></i>
+          <span>Egitim</span>
+        </a>
+        <a href="#Ataturk" class="nav-link" data-section="Ataturk">
+          <i class="fas fa-star"></i>
+          <span>Atatürk Köşesi</span>
+        </a>
         <a href="#contact" class="nav-link" data-section="contact">
           <i class="fas fa-paper-plane"></i>
           <span>İletişim</span>
         </a>
       </nav>
 
-      <!-- Sidebar Footer -->
       <div class="sidebar-footer">
         <div class="social-row">
-          <a href="https://www.instagram.com/enesylc1n/   " class="social-icon" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://x.com/n_enes12902" class="social-icon" target="_blank" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
-          <a href="https://www.linkedin.com/in/enes-yal%C3%A7%C4%B1n-3b3395324/" class="social-icon" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-          <a href="https://www.youtube.com/@EnesYalcn1098" class="social-icon" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="https://www.instagram.com/enesylc1n/   " class="social-icon" target="_blank"
+            aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="mailto:yenes837@gmail.com" class="social-icon" target="_blank" aria-label="mail"><i
+              class="fa-regular fa-envelope"></i></a>
+          <a href="https://www.linkedin.com/in/enes-yal%C3%A7%C4%B1n-3b3395324/" class="social-icon" target="_blank"
+            aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <a href="https://github.com/heisenberg1098" class="social-icon" target="_blank" aria-label="Github"><i
+              class="fa-brands fa-github"></i></a>
         </div>
 
-        <!-- Theme Toggle -->
         <button class="theme-toggle" id="themeToggle" aria-label="Temayı değiştir">
           <span class="theme-icon light-icon"><i class="fas fa-sun"></i> Açık</span>
           <span class="theme-icon dark-icon"><i class="fas fa-moon"></i> Koyu</span>
@@ -97,7 +100,6 @@
     </div>
   </aside>
 
-  <!-- Mobile Header Bar -->
   <div class="mobile-bar">
     <button class="menu-btn" id="menuBtn" aria-label="Menüyü aç">
       <span></span><span></span><span></span>
@@ -109,35 +111,28 @@
   </div>
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- ═══════════════════════════════════════
-       MAIN CONTENT
-  ════════════════════════════════════════ -->
   <main class="main">
 
-    <!-- ── HOME ─────────────────────────────── -->
     <section class="section home-section" id="home">
       <div class="home-inner">
         <div class="home-text">
-          <div class="home-tag" data-animate>
-            <span class="tag-dot"></span>
-            Kayseri, Türkiye
-          </div>
+
           <h1 class="home-title" data-animate>
-            Building<br />
-            <em>Digital Systems</em>
+            Merhaba<br />
+            <em>Ben Enes</em>
           </h1>
           <div class="home-sub-tags" data-animate>
             <span class="home-sub-tag"><i class="fas fa-layer-group"></i> Full Stack</span>
-            <span class="home-sub-tag"><i class="fas fa-brain"></i> AI Integrated</span>
+            <span class="home-sub-tag"><i class="fas fa-brain"></i> AI Integration </span>
             <span class="home-sub-tag"><i class="fas fa-fire"></i> Firebase</span>
             <span class="home-sub-tag"><i class="fas fa-robot"></i> Robotics</span>
+            <span class="home-sub-tag"><i class="fas fa-web"></i> Web Development</span>
           </div>
           <p class="home-desc" data-animate>
-            Web uygulamaları, yapay zeka entegrasyonları ve otomasyon sistemleri geliştiriyorum.
-            Ölçeklenebilir mimariler ve gerçek zamanlı sistemler benim alanım.
+            Web geliştiriyorum, yapay zekâyı deniyorum ve öğrendiklerimi gerçek projelere dönüştürüyorum.
           </p>
           <div class="home-actions" data-animate>
-            <a href="Enes_Yalcin_CV_TR.docx" download class="btn btn-primary">
+            <a href="Enes_Yalcin_CV_TR.pdf" download class="btn btn-primary">
               <i class="fas fa-download"></i>
               CV İndir
             </a>
@@ -150,27 +145,30 @@
         <div class="home-visual" data-animate>
           <div class="home-card-grid">
             <div class="stat-card">
-              <span class="stat-num">5<sup>+</sup></span>
-              <span class="stat-label">Yıl Deneyim</span>
+              <span class="stat-num"><span id="yayınlanmissite">2</span><sup>+</sup></span>
+              <span class="stat-label">Yayınlanmış Site</span>
             </div>
             <div class="stat-card">
-              <span class="stat-num">550<sup>+</sup></span>
-              <span class="stat-label">Memnun Müşteri</span>
+              <span class="stat-num">44<sup>+</sup></span>
+              <span class="stat-label">Github Repo</span>
             </div>
-            <div class="stat-card">
-              <span class="stat-num">30<sup>+</sup></span>
-              <span class="stat-label">Kazanılan Ödül</span>
+            <div class="stat-card ">
+              <span class="stat-num"><span id="bilgilendirme">1</span><sup>+</sup></span>
+              <span class="stat-label">Bilgilendirme</span>
+            </div>
+            <div class="stat-card ">
+              <span class="stat-num"><span id="başarı">6</span><sup>+</sup></span>
+              <span class="stat-label">Başarılar</span>
             </div>
             <div class="stat-card stat-card--wide">
-              <span class="stat-num">220<sup>+</sup></span>
-              <span class="stat-label">Çalışma Saati</span>
+              <span class="stat-num"><span id="sitegoruntulenme">3892</span><sup>+</sup></span>
+              <span class="stat-label">Site Görüntülenme</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── ABOUT ─────────────────────────────── -->
     <section class="section about-section" id="about">
       <div class="section-header" data-animate>
         <span class="section-label">01 — Hakkımda</span>
@@ -180,136 +178,131 @@
       <div class="about-grid">
         <div class="about-bio" data-animate>
           <p>
-            Kayseri OSB Teknik Koleji'nde Bilişim Teknolojileri alanında öğrenciyim. Sadece arayüz değil —
-            uçtan uca sistemler tasarlıyorum: web uygulamalarından AI entegrasyonlarına, Firebase altyapısından
-            gerçek zamanlı sistemlere kadar.
+            Kayseri OSB Teknik Koleji'nde Bilişim Teknolojileri öğrencisiyim. Yazılım öğrenirken sadece örnek projeler
+            yapmak yerine aklıma gelen problemleri küçük sistemlere dönüştürmeyi seviyorum.
           </p>
           <p>
-            C#, SQL, ASP.NET, Firebase ve modern JavaScript ekosistemiyle üretim ortamında projeler geliştiriyorum.
-            Robotik yarışmalarda takım liderliği yaptım, otomasyon sistemleri kurdum. Yazılım mühendisliği alanında
-            uzmanlaşarak gerçek dünya problemlerine ölçeklenebilir çözümler üretmeyi hedefliyorum.
+            Web uygulamaları, Firebase, C#, JavaScript ve yapay zekâ entegrasyonları üzerinde çalışıyorum. Bunun yanında
+            robotik projelerde takım lideri olarak yer aldım.Şu anda en çok ilgimi çeken şey,
+            öğrendiğim bir teknolojiyi gerçek bir probleme uygulamak. Bu site de biraz bunun kaydı.
           </p>
           <a href="#contact" class="btn btn-primary" style="margin-top: 2.4rem;">
             Birlikte çalışalım
             <i class="fas fa-arrow-right"></i>
           </a>
         </div>
+        <div class="current-focus " data-animate>
 
-        <div class="skills-panel" data-animate>
-          <div class="skill-item">
-            <div class="skill-header">
-              <span class="skill-name">Web Tasarımı</span>
-              <span class="skill-pct">90%</span>
-            </div>
-            <div class="skill-bar"><div class="skill-fill" style="--w: 90%"></div></div>
+          <div class="section-header " data-animate>
+            <h2 class="section-title " data-animate>
+              Şu Sıralar
+            </h2>
           </div>
-          <div class="skill-item">
-            <div class="skill-header">
-              <span class="skill-name">HTML</span>
-              <span class="skill-pct">95%</span>
-            </div>
-            <div class="skill-bar"><div class="skill-fill" style="--w: 95%"></div></div>
-          </div>
-          <div class="skill-item">
-            <div class="skill-header">
-              <span class="skill-name">CSS</span>
-              <span class="skill-pct">85%</span>
-            </div>
-            <div class="skill-bar"><div class="skill-fill" style="--w: 85%"></div></div>
-          </div>
-          <div class="skill-item">
-            <div class="skill-header">
-              <span class="skill-name">JavaScript</span>
-              <span class="skill-pct">70%</span>
-            </div>
-            <div class="skill-bar"><div class="skill-fill" style="--w: 70%"></div></div>
-          </div>
-          <div class="skill-item">
-            <div class="skill-header">
-              <span class="skill-name">UI/UX Tasarımı</span>
-              <span class="skill-pct">80%</span>
-            </div>
-            <div class="skill-bar"><div class="skill-fill" style="--w: 80%"></div></div>
-          </div>
-          <div class="skill-item">
-            <div class="skill-header">
-              <span class="skill-name">Grafik Tasarımı</span>
-              <span class="skill-pct">75%</span>
-            </div>
-            <div class="skill-bar"><div class="skill-fill" style="--w: 75%"></div></div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Achievements Row -->
-      <div class="achievements-row" data-animate>
-        <div class="achievement-card">
-          <div class="achievement-icon"><i class="fas fa-trophy"></i></div>
-          <div class="achievement-body">
-            <div class="achievement-title">Türkiye Yarı Final Birincisi</div>
-            <div class="achievement-meta">MEB Robotics Competition · 2026</div>
-          </div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon"><i class="fas fa-medal"></i></div>
-          <div class="achievement-body">
-            <div class="achievement-title">Türkiye Final 4.'süyüz</div>
-            <div class="achievement-meta">National Robotics Final · 2026</div>
-          </div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon"><i class="fas fa-brain"></i></div>
-          <div class="achievement-body">
-            <div class="achievement-title">AI Integrated Web Systems</div>
-            <div class="achievement-meta">Üretim Ortamı Projeleri · 2026–27</div>
-          </div>
-        </div>
-        <div class="achievement-card">
-          <div class="achievement-icon"><i class="fas fa-database"></i></div>
-          <div class="achievement-body">
-            <div class="achievement-title">Firebase CMS Architectures</div>
-            <div class="achievement-meta">Real-time & Scalable Systems · 2026–27</div>
-          </div>
-        </div>
-      </div>
+          <div class="focus-list">
 
-      <!-- Featured: Robot Projesi -->
-      <div class="robot-featured" data-animate>
-        <div class="robot-featured-content">
-          <div class="robot-featured-label">
-            <i class="fas fa-robot"></i>
-            Featured Project
+            <div class="focus-item">
+              <span class="focus-label">Öğreniyor</span>
+              <strong>Siber Güvenlik</strong>
+            </div>
+
+            <div class="focus-item">
+              <span class="focus-label">Üzerinde çalışıyor</span>
+              <a href="https://github.com/heisenberg1098/Web_Agent"><strong>AI Agent'lar</strong></a>
+            </div>
+
+            <div class="focus-item">
+              <span class="focus-label">Geliştiriyor</span>
+              <strong>Fly — Hafıza Sistemleri</strong>
+            </div>
+
           </div>
-          <h3 class="robot-featured-title">MEB Robotics Competition<br />— Takım Liderliği & Yarışma Süreci</h3>
-          <p class="robot-featured-desc">
-            Kayseri OSB Teknik Koleji adına MEB Robotics Competition'a katıldım. Takım çalışması, 
-            gerçek zamanlı problem çözme ve mühendislik kararları alarak yarı finali birinci geçtik.
-            Türkiye finalinde 4. olduk. Bu proje teknik kapasitemi, liderliğimi ve basınç altında
-            çalışma disiplinimi kanıtlıyor.
-          </p>
-          <div class="robot-tag-row">
-            <span class="robot-tag">Robotik Sistemler</span>
-            <span class="robot-tag">Sensör Entegrasyonu</span>
-            <span class="robot-tag">Takım Liderliği</span>
-            <span class="robot-tag">Problem Çözme</span>
-            <span class="robot-tag">MEB 2026</span>
+
+        </div>
+
+
+        <div class="achievements-row" data-animate>
+          <div class="section-header" data-animate>
+            <h2 class="section-title">Başarılarım<br /><em>öğrenin</em></h2>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon"><i class="fas fa-trophy"></i></div>
+            <div class="achievement-body">
+              <div class="achievement-title">Türkiye Yarı Final Birincisi</div>
+              <div class="achievement-meta">MEB Robotics Competition · 2026</div>
+            </div>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon"><i class="fas fa-trophy"></i></div>
+            <div class="achievement-body">
+              <div class="achievement-title">Okul Birinciligi</div>
+              <div class="achievement-meta">OSB Teknik Koleji · 2026</div>
+            </div>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon"><i class="fas fa-medal"></i></div>
+            <div class="achievement-body">
+              <div class="achievement-title">Türkiye Final 4.'süyüz</div>
+              <div class="achievement-meta">National Robotics Final · 2026</div>
+            </div>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon"><i class="fa-solid fa-plane"></i></div>
+            <div class="achievement-body">
+              <div class="achievement-title">Siha Geliştirme</div>
+              <div class="achievement-meta">Üretim Ortamı Projeleri · 2024–25</div>
+            </div>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon"><i class="fas fa-brain"></i></div>
+            <div class="achievement-body">
+              <div class="achievement-title">Bilişim Bölümü Birinciligi</div>
+              <div class="achievement-meta">OSB Teknik Koleji · 2026–27</div>
+            </div>
+          </div>
+          <div class="achievement-card">
+            <div class="achievement-icon"><i class="fas fa-database"></i></div>
+            <div class="achievement-body">
+              <div class="achievement-title">Torpilsiz</div>
+              <div class="achievement-meta">Torpilsiz staj bulan ilk · 2026–27</div>
+            </div>
           </div>
         </div>
-        <div class="robot-badges">
-          <div class="robot-badge">
-            <div class="robot-badge-num">#1</div>
-            <div class="robot-badge-label">TR Yarı Final</div>
+
+        <div class="robot-featured" data-animate>
+          <div class="robot-featured-content">
+            <div class="robot-featured-label">
+              <i class="fas fa-robot"></i>
+              Siber Güvenlik Yarışması
+            </div>
+            <h3 class="robot-featured-title">MEB Robotics Competition<br />— Takım Liderliği & Yarışma Süreci</h3>
+            <p class="robot-featured-desc">
+              Kayseri OSB Teknik Koleji adına MEB Robotics Competition'a katıldım. Takım lideri olarak yarı finali
+              birinci tamamlayıp Türkiye finalinde 4. olduk. Yarışma boyunca takım çalışması, hızlı problem çözme ve
+              baskı altında karar verme konusunda benim için farklı ve öğretici bir deneyim oldu.
+            </p>
+            <div class="robot-tag-row">
+              <span class="robot-tag">Sızma Testi</span>
+              <span class="robot-tag">CTF</span>
+              <span class="robot-tag">Takım Liderliği</span>
+              <span class="robot-tag">Problem Çözme</span>
+              <span class="robot-tag">MEB 2026</span>
+            </div>
           </div>
-          <div class="robot-badge">
-            <div class="robot-badge-num">Top 4</div>
-            <div class="robot-badge-label">Türkiye Final</div>
+          <div class="robot-badges">
+            <div class="robot-badge">
+              <div class="robot-badge-num">#1</div>
+              <div class="robot-badge-label">TR Yarı Final</div>
+            </div>
+            <div class="robot-badge">
+              <div class="robot-badge-num">Top 4</div>
+              <div class="robot-badge-label">Türkiye Final</div>
+            </div>
           </div>
         </div>
-      </div>
 
     </section>
 
-    <!-- ── SERVICES ───────────────────────────── -->
     <section class="section services-section" id="services">
       <div class="section-header" data-animate>
         <span class="section-label">02 — Hizmetler</span>
@@ -329,13 +322,15 @@
         </div>
         <div class="service-card" data-animate>
           <div class="service-icon"><i class="fas fa-mobile-screen"></i></div>
-          <h3>Duyarlı Tasarım</h3>
-          <p>Tüm cihazlarda sorunsuz çalışan esnek ve şık arayüzler geliştiriyorum.</p>
+          <h3>Yapay Zekâ Entegrasyonu</h3>
+          <p>Yapay zekâ servislerini web uygulamalarına ve projelere entegre ediyorum. <a
+              href="https://github.com/heisenberg1098/Web_Agent">Web agentler</a> Geliştiriyorum.</p>
         </div>
         <div class="service-card" data-animate>
           <div class="service-icon"><i class="fas fa-bullhorn"></i></div>
-          <h3>Dijital Pazarlama</h3>
-          <p>Projelerinizi daha fazla kişiye ulaştırmak için dijital pazarlama çözümleri sunuyorum.</p>
+          <h3>Otomasyon Sistemleri</h3>
+          <p>Tekrarlayan işlemleri azaltmak ve işleri kolaylaştırmak için otomasyon sistemleri geliştiriyorum.Bunu
+            kendim içinde yapıyorum</p>
         </div>
         <div class="service-card" data-animate>
           <div class="service-icon"><i class="fas fa-magnifying-glass-dollar"></i></div>
@@ -343,14 +338,13 @@
           <p>Web sitenizin arama motorlarında daha üst sıralarda yer almasını sağlıyorum.</p>
         </div>
         <div class="service-card" data-animate>
-          <div class="service-icon"><i class="fab fa-wordpress"></i></div>
-          <h3>WordPress</h3>
-          <p>Kullanımı kolay ve profesyonel WordPress siteleri oluşturuyorum.</p>
+          <div class="service-icon"><i class="fa-solid fa-book-open"></i></div>
+          <h3>Egitim</h3>
+          <p>Öğrendiğim teknolojileri ve geliştirdiğim projeleri anlaşılır şekilde paylaşmaya çalışıyorum. </p>
         </div>
       </div>
     </section>
 
-    <!-- ── PORTFOLIO ──────────────────────────── -->
     <section class="section portfolio-section" id="projeler">
       <div class="section-header" data-animate>
         <span class="section-label">03 — Portföy</span>
@@ -358,7 +352,8 @@
       </div>
 
       <div class="portfolio-grid">
-        <div class="project-card" data-animate onclick="window.open('https://github.com/heisenberg1098/Yuz-Tanima-Uygulamasi')">
+        <div class="project-card" data-animate
+          onclick="window.open('https://github.com/heisenberg1098/Yuz-Tanima-Uygulamasi')">
           <div class="project-thumb">
             <img src="assets/img/yuz tanıma.png" alt="Yüz Tanıma" />
             <div class="project-overlay">
@@ -371,7 +366,8 @@
           </div>
         </div>
 
-        <div class="project-card" data-animate onclick="window.open('https://github.com/heisenberg1098/3D-Ari-Animasyonlu-Web-Sitesi')">
+        <div class="project-card" data-animate
+          onclick="window.open('https://github.com/heisenberg1098/3D-Ari-Animasyonlu-Web-Sitesi')">
           <div class="project-thumb">
             <img src="assets/img/arı.png" alt="3D Arı" />
             <div class="project-overlay">
@@ -384,7 +380,8 @@
           </div>
         </div>
 
-        <div class="project-card" data-animate onclick="window.open('https://github.com/heisenberg1098/Arac-Otomasyon')">
+        <div class="project-card" data-animate
+          onclick="window.open('https://github.com/heisenberg1098/Arac-Otomasyon')">
           <div class="project-thumb">
             <img src="assets/img/Araba.png" alt="Araç Otomasyon" />
             <div class="project-overlay">
@@ -410,7 +407,8 @@
           </div>
         </div>
 
-        <div class="project-card" data-animate onclick="window.open('https://github.com/heisenberg1098/Arac-Otomasyon')">
+        <div class="project-card" data-animate
+          onclick="window.open('https://github.com/heisenberg1098/Arac-Otomasyon')">
           <div class="project-thumb">
             <img src="assets/img/yazı.png" alt="Yazma Testi" />
             <div class="project-overlay">
@@ -423,7 +421,8 @@
           </div>
         </div>
 
-        <div class="project-card" data-animate onclick="alert('DEV Express ile geliştirildi');window.open('https://github.com/heisenberg1098/Sirket-Otomasyonu')">
+        <div class="project-card" data-animate
+          onclick="alert('DEV Express ile geliştirildi');window.open('https://github.com/heisenberg1098/Sirket-Otomasyonu')">
           <div class="project-thumb">
             <img src="assets/img/ME (1).png" alt="Şirket Otomasyonu" />
             <div class="project-overlay">
@@ -438,7 +437,6 @@
       </div>
     </section>
 
-    <!-- ── WEB SITES ──────────────────────────── -->
     <section class="section web-section" id="web">
       <div class="section-header" data-animate>
         <span class="section-label">04 — Web Siteleri</span>
@@ -455,10 +453,54 @@
       </div>
     </section>
 
-    <!-- ── CONTACT ────────────────────────────── -->
+    <section class="section egitim-section" id="egitim">
+      <div class="section-header" data-animate>
+        <span class="section-label">05 — Egitim</span>
+        <h2 class="section-title">Size Aktarmak iztedigim Bilgiler</h2>
+      </div>
+
+      <div class="egitim-grid" id="bilgilendirmeContainer">
+        <div class="egitim-loading">
+          <div class="loading-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <p>Yükleniyor…</p>
+        </div>
+      </div>
+    </section>
+
+
+
+
+    <section class="section Ataturk-section" id="Ataturk">
+      <div class="section-header" data-animate>
+        <span class="section-label">06 — Atatürk Köşesi</span>
+        <h2 class="section-title">Ata'ma<br><em>saygıyla</em></h2>
+      </div>
+
+      <div class="Ataturk-grid" id="websiteContainer">
+        <figure class="ataturk-quote in-view" data-animate="">
+          <blockquote>“Muhtaç Oldugun Kudret Damarlarındaki Asil Kanda Mevcuttur”</blockquote>
+          <figcaption>— Mustafa Kemal Atatürk</figcaption>
+        </figure><br><br>
+        <div class="ataturk-body in-view" data-animate="" bis_skin_checked="1">
+          <p>
+            Bu köşeyi süs olsun diye açmadım. Bu topraklarda okuyabiliyor, üretebiliyor ve hayallerimin
+            peşinden gidebiliyorsam bunu O'na ve o zor günlerde bu ülkeyi kuran herkese borçluyum. Teknolojiyle
+            uğraşan bir genç olarak, O'nun bilime ve akla verdiği değeri kendi işimde yaşatmaya çalışıyorum.
+          </p>
+          <p>
+            Ne zaman zorlansam, ne zaman “olmuyor” desem; azmi, disiplini ve “muhtaç olduğun kudret damarlarındaki
+            asil kanda mevcuttur” cümlesini hatırlıyorum. Bu köşe, minik de olsa, O'na duyduğum saygının ve
+            şükranın samimi bir ifadesidir.
+          </p>
+          <div class="ataturk-sign" bis_skin_checked="1">M. Enes Yalçın</div>
+        </div>
+    </section>
+
     <section class="section contact-section" id="contact">
       <div class="section-header" data-animate>
-        <span class="section-label">05 — İletişim</span>
+        <span class="section-label">07 — İletişim</span>
         <h2 class="section-title">Birlikte bir şeyler<br /><em>yapalım</em></h2>
       </div>
 
@@ -466,7 +508,8 @@
         <div class="contact-info" data-animate>
           <p>Bir projeniz mi var? Birlikte çalışmak mı istiyorsunuz? Mesaj gönderin, en kısa sürede dönüş yapayım.</p>
           <div class="contact-links">
-            <a href="https://www.linkedin.com/in/enes-yal%C3%A7%C4%B1n-3b3395324/" target="_blank" class="contact-link-item">
+            <a href="https://www.linkedin.com/in/enes-yal%C3%A7%C4%B1n-3b3395324/" target="_blank"
+              class="contact-link-item">
               <i class="fab fa-linkedin-in"></i>
               LinkedIn Profili
               <i class="fas fa-arrow-up-right-from-square"></i>
@@ -521,20 +564,17 @@
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="site-footer">
       <p>Tasarlayan <span>M. Enes Yalçın</span> · Tüm hakları saklıdır © 2026</p>
     </footer>
 
   </main>
 
-  <!-- ═══════════════════════════════════════
-       ADMIN LOGIN MODAL
-  ════════════════════════════════════════ -->
   <div id="adminModal" class="modal" role="dialog" aria-modal="true" aria-label="Yönetici Girişi">
     <div class="modal-backdrop" onclick="document.getElementById('adminModal').style.display='none'"></div>
     <div class="modal-card">
-      <button class="modal-close" onclick="document.getElementById('adminModal').style.display='none'" aria-label="Kapat">
+      <button class="modal-close" onclick="document.getElementById('adminModal').style.display='none'"
+        aria-label="Kapat">
         <i class="fas fa-times"></i>
       </button>
       <div class="modal-icon"><i class="fas fa-shield-halved"></i></div>
@@ -552,9 +592,6 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       ADMIN PANEL (Full Page Overlay)
-  ════════════════════════════════════════ -->
   <div id="adminPanel" class="admin-panel" style="display:none;">
     <div class="admin-topbar">
       <div class="admin-brand">
@@ -567,7 +604,6 @@
       </button>
     </div>
 
-    <!-- Stats Bar -->
     <div class="admin-stats-bar" id="adminStatsBar">
       <div class="admin-stat-chip">
         <strong id="statTotal">—</strong> Toplam Proje
@@ -583,7 +619,6 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchAdminTab('add')" id="tabAdd">
         <i class="fas fa-plus-circle"></i> Yeni Proje
@@ -598,7 +633,6 @@
 
     <div class="admin-content" style="grid-template-columns: 1fr; max-width: 96rem;">
 
-      <!-- TAB: Add Project -->
       <div class="admin-view active" id="viewAdd">
         <div class="admin-card">
           <div class="admin-card-header">
@@ -644,11 +678,13 @@
                 </div>
                 <div class="upload-preview" id="uploadPreview" style="display:none;">
                   <img id="uploadPreviewImg" src="" alt="Önizleme" />
-                  <button type="button" class="upload-remove" onclick="uploadTemizle(event)" aria-label="Görseli kaldır">
+                  <button type="button" class="upload-remove" onclick="uploadTemizle(event)"
+                    aria-label="Görseli kaldır">
                     <i class="fas fa-times"></i>
                   </button>
                 </div>
-                <input type="file" id="cloudinaryFileInput" accept="image/*" style="display:none;" onchange="cloudinaryUpload(this.files[0])" />
+                <input type="file" id="cloudinaryFileInput" accept="image/*" style="display:none;"
+                  onchange="cloudinaryUpload(this.files[0])" />
               </div>
               <input type="hidden" id="sResim" />
               <div style="margin-top:.8rem; display:flex; align-items:center; gap:.8rem;">
@@ -656,7 +692,8 @@
                 <span style="font-size:1.2rem; color:var(--c-text-3);">veya URL girin</span>
                 <div style="flex:1; height:1px; background:var(--c-border);"></div>
               </div>
-              <input type="text" id="sResimUrl" placeholder="https://…/gorsel.png" oninput="document.getElementById('sResim').value=this.value" style="margin-top:.8rem;" />
+              <input type="text" id="sResimUrl" placeholder="https://…/gorsel.png"
+                oninput="document.getElementById('sResim').value=this.value" style="margin-top:.8rem;" />
             </div>
             <div class="form-group">
               <label>Yayın Durumu</label>
@@ -675,7 +712,6 @@
         </div>
       </div>
 
-      <!-- TAB: Projects -->
       <div class="admin-view" id="viewProjects">
         <div class="admin-card">
           <div class="admin-card-header">
@@ -686,7 +722,6 @@
         </div>
       </div>
 
-      <!-- TAB: Messages -->
       <div class="admin-view" id="viewMessages">
         <div class="admin-card">
           <div class="admin-card-header">
@@ -700,7 +735,6 @@
     </div>
   </div>
 
-  <!-- Edit Project Modal -->
   <div id="editModal" class="edit-modal" role="dialog" aria-modal="true">
     <div class="modal-backdrop" onclick="editModalKapat()"></div>
     <div class="edit-modal-card">
@@ -757,19 +791,15 @@
     </div>
   </div>
 
-  <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Offline Banner -->
   <div class="offline-banner" id="offlineBanner">
     <i class="fas fa-wifi"></i> İnternet bağlantısı yok — bazı içerikler yüklenemeyebilir.
   </div>
 
-  <!-- ═══════════════════════════════════════
-       FIREBASE + JS
-  ════════════════════════════════════════ -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="src/main.js"></script>
 </body>
+
 </html>
