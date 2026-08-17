@@ -1603,7 +1603,7 @@ ul, ol { list-style: none; }
   margin-bottom: var(--sp-6);
   display: block; 
   overflow: hidden; 
-  max-height: 190rem; 
+  max-height: 290rem; 
   opacity: 1;
   transition: max-height 0.5s ease-in-out, opacity 0.4s ease;
 }
