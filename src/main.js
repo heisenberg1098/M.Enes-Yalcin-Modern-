@@ -18,6 +18,90 @@ if (!firebase.apps.length) {
 }
 
 const db = firebase.firestore();
+const auth = firebase.auth();
+let authorizedAdmin = false;
+let activeAdminUid = null;
+let adminDataUnsubscribers = [];
+let adminLoginInProgress = false;
+
+async function hasAdminAccess(user = auth.currentUser) {
+  if (!user) return false;
+  const adminDoc = await db.collection('admin_users').doc(user.uid).get({ source: 'server' });
+  return adminDoc.exists && adminDoc.get('role') === 'admin';
+}
+
+function adminAuthErrorMessage(error) {
+  const code = error?.code || 'unknown';
+
+  if (code === 'permission-denied') {
+    return 'Firebase oturumu açıldı ancak admin_users belgesi okunamadı (permission-denied). Firestore Rules içinde oturum açmış kullanıcının kendi UID belgesine get izni olduğunu ve kuralların yayımlandığını kontrol edin.';
+  }
+  if (code === 'unavailable' || code === 'deadline-exceeded' || code === 'auth/network-request-failed') {
+    return `Firebase bağlantısı kurulamadı (${code}). Bağlantınızı kontrol edip tekrar deneyin.`;
+  }
+
+  return `Giriş doğrulanamadı (${code}). Firebase hata ayrıntısı tarayıcı konsoluna kaydedildi.`;
+}
+
+function clearAdminDataListeners() {
+  adminDataUnsubscribers.forEach(unsubscribe => unsubscribe());
+  adminDataUnsubscribers = [];
+}
+
+function hideAdminPanel() {
+  clearAdminDataListeners();
+  authorizedAdmin = false;
+  activeAdminUid = null;
+  const panel = document.getElementById('adminPanel');
+  if (panel) panel.style.display = 'none';
+  const projects = document.getElementById('adminProjeListesi');
+  const messages = document.getElementById('adminMesajListesi');
+  if (projects) projects.replaceChildren();
+  if (messages) messages.replaceChildren();
+}
+
+function showAdminPanel(user) {
+  authorizedAdmin = true;
+  if (activeAdminUid === user.uid) return;
+  activeAdminUid = user.uid;
+  const panel = document.getElementById('adminPanel');
+  if (panel) {
+    panel.style.display = 'flex';
+    panel.style.flexDirection = 'column';
+  }
+  adminMesajlariYukle();
+  adminProjeleriYukle();
+}
+
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    hideAdminPanel();
+    return;
+  }
+
+  try {
+    if (await hasAdminAccess(user)) {
+      showAdminPanel(user);
+      return;
+    }
+  } catch (error) {
+    hideAdminPanel();
+    console.error('Yönetici yetkisi doğrulanamadı:', { code: error?.code, message: error?.message });
+    if (!adminLoginInProgress) {
+      Toast.error(adminAuthErrorMessage(error), 'Yetki Kontrolü Hatası');
+    }
+    return;
+  }
+
+  hideAdminPanel();
+  await auth.signOut();
+});
+
+async function requireAdmin() {
+  if (auth.currentUser && authorizedAdmin) return true;
+  Toast.error('Bu işlem için yetkili yönetici girişi gerekiyor.', 'Yetki Gerekli');
+  return false;
+}
 
 // ─── 2. TOAST NOTIFICATION SYSTEM ───────────────
 const Toast = (() => {
@@ -307,64 +391,66 @@ const WebsiteLoader = (() => {
 
     if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
 
-    // ÇÖZÜM: Katı where filtresi yerine tüm listeyi çekip frontend üzerinde kontrollü süzüyoruz
-    _unsubscribe = db.collection("websiteler")
-      .orderBy("tarih", "desc")
-      .onSnapshot(
-        (querySnapshot) => {
-          _retryCount = 0;
-          container.innerHTML = '';
+    const feeds = new Map();
+    const queries = [
+      db.collection('websiteler').where('status', 'in', ['active', 'development']),
+      db.collection('websiteler').where('isPublished', '==', true)
+    ];
 
-          const activeDocs = [];
-          querySnapshot.forEach(doc => {
-            const d = doc.data();
-            const status = d.status || 'active';
+    const renderFeeds = () => {
+      if (feeds.size !== queries.length) return;
+      _retryCount = 0;
+      container.replaceChildren();
 
-            // Sadece aktif yayında olanları VEYA senin geliştirme aşamasında (development) bıraktığın siteleri vitrinde gösteriyoruz.
-            // Taslak (draft) ve Arşivlenmiş (archived) siteler ana sayfada gizlenir.
-            if (status === 'active' || status === 'development' || d.isPublished === true) {
-              activeDocs.push(doc);
-            }
-          });
+      const publicDocs = new Map();
+      feeds.forEach(snapshot => snapshot.forEach(doc => publicDocs.set(doc.id, doc)));
+      const activeDocs = [...publicDocs.values()].sort((a, b) => {
+        const aDate = a.data().tarih?.toMillis?.() || 0;
+        const bDate = b.data().tarih?.toMillis?.() || 0;
+        return bDate - aDate;
+      });
 
-          if (activeDocs.length === 0) {
-            container.innerHTML = `
-              <div class="web-loading" style="grid-column:1/-1">
-                <i class="fas fa-globe" style="font-size:3.2rem; color: var(--c-text-3);"></i>
-                <p>Henüz sergilenecek bir web sitesi eklenmemiş.</p>
-              </div>`;
-            return;
-          }
+      if (activeDocs.length === 0) {
+        container.innerHTML = `
+          <div class="web-loading" style="grid-column:1/-1">
+            <i class="fas fa-globe" style="font-size:3.2rem; color: var(--c-text-3);"></i>
+            <p>Henüz sergilenecek bir web sitesi eklenmemiş.</p>
+          </div>`;
+        return;
+      }
 
-          activeDocs.forEach(doc => renderCard(doc, container));
+      activeDocs.forEach(doc => renderCard(doc, container));
+      container.querySelectorAll('.web-card').forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = `opacity 0.4s ease ${i * 0.08}s, transform 0.4s ease ${i * 0.08}s`;
+        requestAnimationFrame(() => setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 50));
+      });
+    };
 
-          container.querySelectorAll('.web-card').forEach((card, i) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = `opacity 0.4s ease ${i * 0.08}s, transform 0.4s ease ${i * 0.08}s`;
-            requestAnimationFrame(() => setTimeout(() => {
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }, 50));
-          });
-        },
-        (error) => {
-          console.error("Firestore Websiteler Hatası:", error);
-          _retryCount++;
+    const handleError = error => {
+      console.error('Firestore web siteleri yükleme hatası:', error);
+      _retryCount++;
+      const canRetry = _retryCount < MAX_RETRY;
+      container.innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-cloud-slash"></i>
+          <p>Projeler yüklenemedi. ${canRetry ? 'Lütfen tekrar deneyin.' : 'Bağlantı sorunu devam ediyor.'}</p>
+          ${canRetry ? `<button class="retry-btn" onclick="WebsiteLoader.load()">
+            <i class="fas fa-rotate-right"></i> Tekrar Dene
+          </button>` : ''}
+        </div>`;
+      Toast.error('Projeler yüklenemedi. İnternet bağlantınızı kontrol edin.', 'Yükleme Hatası');
+    };
 
-          const canRetry = _retryCount < MAX_RETRY;
-          container.innerHTML = `
-            <div class="error-state">
-              <i class="fas fa-cloud-slash"></i>
-              <p>Projeler yüklenemedi. ${canRetry ? 'Lütfen tekrar deneyin.' : 'Bağlantı sorunu devam ediyor.'}</p>
-              ${canRetry ? `<button class="retry-btn" onclick="WebsiteLoader.load()">
-                <i class="fas fa-rotate-right"></i> Tekrar Dene
-              </button>` : ''}
-            </div>`;
-
-          Toast.error('Projeler yüklenemedi. İnternet bağlantınızı kontrol edin.', 'Yükleme Hatası');
-        }
-      );
+    const unsubscribers = queries.map((query, index) => query.onSnapshot(snapshot => {
+      feeds.set(index, snapshot);
+      renderFeeds();
+    }, handleError));
+    _unsubscribe = () => unsubscribers.forEach(unsubscribe => unsubscribe());
   }
 
   return { load };
@@ -412,57 +498,50 @@ function showFormNotification(el, message, type) {
 
 // ─── 10. ADMIN: LOGIN MODAL ──────────────────────
 function adminPopUpAc() {
+  if (auth.currentUser && authorizedAdmin) {
+    showAdminPanel(auth.currentUser);
+    return;
+  }
   const modal = document.getElementById('adminModal');
   if (modal) {
     modal.style.display = 'flex';
-    setTimeout(() => document.getElementById('pSifre')?.focus(), 100);
+    setTimeout(() => document.getElementById('adminEmail')?.focus(), 100);
   }
 }
+window.adminPopUpAc = adminPopUpAc;
 
 async function adminGirisKontrol() {
-  const girilen = document.getElementById('pSifre')?.value;
-  if (!girilen) return;
+  const email = document.getElementById('adminEmail')?.value.trim();
+  const password = document.getElementById('pSifre')?.value;
+  const button = document.querySelector('#adminModal .btn-primary');
+  if (!email || !password) {
+    Toast.error('E-posta ve şifre alanlarını doldurun.', 'Eksik Bilgi');
+    return;
+  }
 
   try {
-    const doc = await db.collection("ayarlar").doc("admin").get();
-    if (doc.exists && doc.data().sifre === girilen) {
-      document.getElementById('adminModal').style.display = 'none';
-      document.getElementById('pSifre').value = '';
-      const panel = document.getElementById('adminPanel');
-      panel.style.display = 'flex';
-      panel.style.flexDirection = 'column';
-      adminMesajlariYukle();
-      adminProjeleriYukle();
-    } else {
-      const input = document.getElementById('pSifre');
-      input.style.borderColor = '#ef4444';
-      input.style.animation = 'shake 0.4s ease';
-      Toast.error('Yanlış şifre. Tekrar deneyin.', 'Giriş Başarısız');
-      setTimeout(() => {
-        input.style.borderColor = '';
-        input.style.animation = '';
-        input.value = '';
-        input.focus();
-      }, 500);
+    adminLoginInProgress = true;
+    if (button) button.disabled = true;
+    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+    const credential = await auth.signInWithEmailAndPassword(email, password);
+    if (!(await hasAdminAccess(credential.user))) {
+      await auth.signOut();
+      Toast.error('Firebase girişi başarılı, ancak bu UID için admin_users belgesinde role: "admin" bulunamadı.', 'Yönetici Yetkisi Yok');
+      return;
     }
+
+    showAdminPanel(credential.user);
+    document.getElementById('adminModal').style.display = 'none';
+    document.getElementById('pSifre').value = '';
   } catch (err) {
-    console.error("Admin giriş hatası:", err);
-    Toast.error('Bağlantı hatası. Firestore ayarlarını kontrol edin.', 'Bağlantı Hatası');
+    console.error('Yönetici girişi başarısız:', { code: err?.code, message: err?.message });
+    Toast.error(adminAuthErrorMessage(err), 'Giriş Başarısız');
+  } finally {
+    adminLoginInProgress = false;
+    if (button) button.disabled = false;
   }
 }
-
-// CSS shake animation injection
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20%       { transform: translateX(-8px); }
-    40%       { transform: translateX(8px); }
-    60%       { transform: translateX(-6px); }
-    80%       { transform: translateX(6px); }
-  }
-`;
-document.head.appendChild(shakeStyle);
+window.adminGirisKontrol = adminGirisKontrol;
 
 // ─── 11. ADMIN: ADD PROJECT FORM ─────────────────
 function siteEkleFormHazirla() {
@@ -471,6 +550,7 @@ function siteEkleFormHazirla() {
 
   form.onsubmit = async (e) => {
     e.preventDefault();
+    if (!(await requireAdmin())) return;
     const btn = form.querySelector('[type="submit"]');
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Ekleniyor…';
@@ -521,9 +601,9 @@ const STATUS_LABELS = {
 
 function adminProjeleriYukle() {
   const liste = document.getElementById('adminProjeListesi');
-  if (!liste) return;
+  if (!liste || !authorizedAdmin) return;
 
-  db.collection("websiteler").orderBy("tarih", "desc").onSnapshot(snapshot => {
+  const unsubscribe = db.collection("websiteler").orderBy("tarih", "desc").onSnapshot(snapshot => {
     // Update stats
     let total = 0, active = 0, draft = 0;
     snapshot.forEach(doc => {
@@ -579,9 +659,11 @@ function adminProjeleriYukle() {
     console.error("Proje listeleme hatası:", error);
     Toast.error('Projeler listelenemedi.', 'Hata');
   });
+  adminDataUnsubscribers.push(unsubscribe);
 }
 
 async function projeYayinla(id) {
+  if (!(await requireAdmin())) return;
   try {
     await db.collection("websiteler").doc(id).update({
       status: 'active',
@@ -595,6 +677,7 @@ async function projeYayinla(id) {
 }
 
 async function projeYayindanKaldir(id) {
+  if (!(await requireAdmin())) return;
   try {
     await db.collection("websiteler").doc(id).update({
       status: 'draft',
@@ -608,6 +691,7 @@ async function projeYayindanKaldir(id) {
 }
 
 async function projeSil(id, isim) {
+  if (!(await requireAdmin())) return;
   if (!confirm(`"${isim}" projesini kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz.`)) return;
   try {
     await db.collection("websiteler").doc(id).delete();
@@ -619,6 +703,7 @@ async function projeSil(id, isim) {
 }
 
 async function projeEdit(id) {
+  if (!(await requireAdmin())) return;
   try {
     const doc = await db.collection("websiteler").doc(id).get();
     if (!doc.exists) {
@@ -655,6 +740,7 @@ function editFormHazirla() {
 
   form.onsubmit = async (e) => {
     e.preventDefault();
+    if (!(await requireAdmin())) return;
     const id = document.getElementById('editDocId').value;
     const btn = form.querySelector('[type="submit"]');
     btn.disabled = true;
@@ -696,9 +782,9 @@ window.projeSil = projeSil;
 // ─── 13. ADMIN: LIST & DELETE MESSAGES ───────────
 function adminMesajlariYukle() {
   const liste = document.getElementById('adminMesajListesi');
-  if (!liste) return;
+  if (!liste || !authorizedAdmin) return;
 
-  db.collection("mesajlar").orderBy("tarih", "desc").onSnapshot(snapshot => {
+  const unsubscribe = db.collection("mesajlar").orderBy("tarih", "desc").onSnapshot(snapshot => {
     // Update stat
     const el = document.getElementById('statMessages');
     if (el) el.textContent = snapshot.size;
@@ -736,9 +822,11 @@ function adminMesajlariYukle() {
     console.error("Mesaj listeleme hatası:", error);
     Toast.error('Mesajlar yüklenemedi.', 'Hata');
   });
+  adminDataUnsubscribers.push(unsubscribe);
 }
 
-function mesajSil(id) {
+async function mesajSil(id) {
+  if (!(await requireAdmin())) return;
   if (confirm("Bu mesajı silmek istediğinize emin misiniz?")) {
     db.collection("mesajlar").doc(id).delete()
       .then(() => Toast.success('Mesaj silindi.'))
@@ -751,12 +839,23 @@ function mesajSil(id) {
 window.mesajSil = mesajSil;
 
 function panelKapat() {
-  document.getElementById('adminPanel').style.display = 'none';
+  adminCikis();
 }
 window.panelKapat = panelKapat;
 
+async function adminCikis() {
+  try {
+    await auth.signOut();
+  } catch (error) {
+    console.error('Yönetici oturumu kapatılamadı:', error);
+    Toast.error('Oturum kapatılamadı. Tekrar deneyin.', 'Hata');
+  }
+}
+window.adminCikis = adminCikis;
+
 // ─── 14. ADMIN TABS ──────────────────────────────
 function switchAdminTab(tab) {
+  if (!authorizedAdmin) return;
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.admin-view').forEach(v => v.classList.remove('active'));
 
@@ -891,6 +990,7 @@ window.cloudinaryTikla = function () {
 
 window.cloudinaryUpload = async function (file) {
   if (!file) return;
+  if (!(await requireAdmin())) return;
   CloudinaryUpload.showLoading();
   try {
     const url = await CloudinaryUpload.upload(file);
@@ -1054,7 +1154,515 @@ function iletisimFormuHazirla() {
 
 
 
-// ─── 16. INIT ─────────────────────────────────────
+// ─── 16. CURRENT FOCUS PROJECTS ───────────────────
+const FocusProjects = (() => {
+  const projects = [
+  {
+    "icon": "fa-solid fa-house-signal",
+    "tag": "ESP8266 · Arduino Nano · IoT",
+    "status": "Tamamlandı",
+    "title": "Akıllı Ev Otomasyonu",
+    "summary": "Wi-Fi üzerinden kontrol edilen, sensör destekli akıllı ev ve güvenlik sistemi.",
+    "description": "Bu projede Wi-Fi üzerinden kontrol edilebilen ve çeşitli sensörlerle donatılmış bir akıllı ev ve güvenlik sistemi geliştirdim. NodeMCU (ESP8266) ile Arduino Nano, UART seri haberleşmesi üzerinden senkronize çalışıyor. Web arayüzüne yerel ağdan erişilebiliyor; ngrok ile sisteme internet üzerinden farklı konumlardan da ulaşılabiliyor.\n\nGüvenlik senaryosunda kızılötesi sıcaklık ve hareket sensörleri izinsiz girişleri algılıyor. Algılama sonrası kullanıcıya alarmı web arayüzünden kapatması için 10 saniye veriliyor. Alarm bu sürede kapatılmazsa buzzer ve siren devreye giriyor; siren 5 dakika boyunca çalıyor.\n\nYazılım tarafında C++ ve JavaScript kullandım; web arayüzünde Bootstrap’ten yararlandım. ESP8266WiFi.h, EEPROM, SoftwareSerial, WiFiUDP ve NTPClient kütüphaneleriyle çalıştım. Donanımda NodeMCU, Arduino Nano, 16 kanallı röle, LED’ler, transistör ve kontaktör kullandım.",
+    "highlights": [
+      "NodeMCU (ESP8266) ve Arduino Nano arasında UART haberleşmesi",
+      "Wi-Fi ve web arayüzü üzerinden uzaktan kontrol",
+      "Ngrok ile yerel ağ dışından erişim",
+      "Kızılötesi sıcaklık ve hareket sensörleriyle algılama",
+      "Alarmı web arayüzünden kapatmak için 10 saniyelik süre",
+      "İptal edilmezse 5 dakika çalışan siren",
+      "16 kanallı röle ile cihaz kontrolü",
+      "Donanım: NodeMCU, Arduino Nano, LED, transistör ve kontaktör",
+      "Ölçüm ve kurulum araçları: multimetre ve röleler"
+    ],
+    "tech": [
+      "C++",
+      "JavaScript",
+      "NodeMCU ESP8266",
+      "Arduino Nano",
+      "UART",
+      "ESP8266WiFi.h",
+      "EEPROM",
+      "SoftwareSerial",
+      "WiFiUDP",
+      "NTPClient",
+      "Bootstrap",
+      "Röle"
+    ],
+    "image": "",
+    "links": [],
+    "images": [
+      "assets/img/projeIMG/1. akilli ev sistemi gorsel 1.jpeg",
+      "assets/img/projeIMG/1. akilli ev sistemi gorsel 2.jpeg",
+      "assets/img/projeIMG/1. akilli ev sistemi gorsel 3.jpeg",
+      "assets/img/projeIMG/1. akilli ev sistemi gorsel 4.jpeg",
+      "assets/img/projeIMG/1. akilli ev sistemi kamera.jpeg",
+      "assets/img/projeIMG/2. akilli ev sistemi gorsel 1.jpeg",
+      "assets/img/projeIMG/2. akilli ev sistemi gorsel 2.jpeg",
+      "assets/img/projeIMG/2. akilli ev sistemi gorsel 3.jpeg",
+      "assets/img/projeIMG/2. akilli ev sistemi gorsel 4.jpeg",
+      "assets/img/projeIMG/3. akilli ev sistemi.jpeg",
+      "assets/img/projeIMG/akilli ev ortak gorsel.jpeg"
+    ]
+  },
+  {
+    "icon": "fa-solid fa-robot",
+    "tag": "Raspberry Pi · Python · Computer Vision",
+    "status": "Takım projesi",
+    "title": "Otonom Robotik Kol",
+    "summary": "Kamera ile nesnelerin rengini, üzerindeki şekilleri ve konumlarını algılayarak küpleri doğru kutulara yerleştiren otonom robotik kol.",
+    "description": "18. Uluslararası MEB Robot Yarışması kapsamında düzenlenen Endüstriyel Robotik Kol kategorisi için bir takım olarak otonom çalışan bir robotik kol geliştirdik. Projenin amacı, başlangıç alanında bulunan renkli ve desenli pleksi küpleri algılayarak özelliklerine uygun hedef kutulara otomatik olarak yerleştirmekti.\n\nGörüntü işleme tarafında Raspberry Pi 4, kamera ve Python kullandık. Kamera üzerinden alınan görüntüleri işleyerek küplerin yalnızca renklerini değil, üzerlerindeki şekilleri ve konumlarını da tespit eden bir sistem geliştirdik. Elde edilen veriler doğrultusunda nesnelerin sınıflandırılması ve hangi hedefe yerleştirileceğinin belirlenmesi üzerine çalıştık.\n\nMekanik tarafta en az dört eksenli eklemli bir robot kol kullandık. Nesnelerin alınması ve bırakılması için servo motor kontrollü bir tutucu tasarladık. Robotun mekanik tasarımında mevcut bir 3D modelden yararlandık ve bu modeli kendi ihtiyaçlarımıza uygun olacak şekilde düzenledik.\n\nYarışmanın en önemli gereksinimlerinden biri sistemin tamamen otonom çalışmasıydı. Bu nedenle robotun başlangıç komutundan sonra dışarıdan yönlendirme almadan algılama, karar verme ve hareket etme süreçlerini gerçekleştirmesi gerekiyordu.\n\nBu projede görüntü işleme, mekanik tasarım ve yazılımın fiziksel bir sistem üzerinde birlikte çalışmasını deneyimledim. Özellikle kamera üzerinden elde edilen bilgilerin robotun hareketlerine dönüştürülmesi, üzerinde yoğunlaştığımız temel konulardan biriydi.",
+    "highlights": [
+      "Kamera üzerinden nesne algılama",
+      "Küplerin renklerini tespit etme",
+      "Küpler üzerindeki şekilleri tanıma",
+      "Nesnelerin konumlarını belirleme",
+      "Python ile görüntü işleme",
+      "Raspberry Pi 4 üzerinde sistem geliştirme",
+      "En az dört eksenli eklemli robot kol",
+      "Servo motor kontrollü tutucu",
+      "Otonom nesne alma ve yerleştirme",
+      "Yarışma gereksinimlerine uygun mekanik tasarım"
+    ],
+    "tech": [
+      "Raspberry Pi 4",
+      "Python",
+      "Computer Vision",
+      "Camera",
+      "Servo Motors",
+      "Robotics",
+      "3D Design"
+    ],
+    "image": "",
+    "links": [],
+    "images": [
+      "assets/img/projeIMG/robotkol.jpg"
+    ]
+  },
+  {
+    "icon": "fa-solid fa-plane",
+    "tag": "YOLOv11 · Python · OpenCV · UAV",
+    "status": "Takım projesi",
+    "title": "CAPELLA – SİHA Projesi",
+    "summary": "Görüntü işleme, elektronik entegrasyon ve 3D tasarım çalışmalarında görev aldığım insansız hava aracı projesi.",
+    "description": "CAPELLA projesi kapsamında bir takım olarak insansız hava aracı geliştirme çalışmalarında yer aldım. Projenin farklı aşamalarında görüntü işleme, elektronik bağlantılar, araştırma, deneme ve tasarım süreçlerine katkı sağladım.\n\nGörüntü işleme tarafında Python, OpenCV ve YOLOv11 üzerine çalıştım. Görüntüler üzerinden nesne algılama ve sınıflandırma süreçleriyle ilgilendim. Modelin eğitimi ve görüntü işleme çalışmalarının yanı sıra bu sistemlerin projenin genel yapısına nasıl entegre edilebileceği üzerinde de çalıştım.\n\nElektronik tarafta genel kablolama ve bileşenlerin birbiriyle uyumlu çalışması üzerine görev aldım. Uçuş kontrol sistemi, güç dağıtımı ve diğer elektronik bileşenlerin birlikte çalışması için yapılan araştırma ve deneme süreçlerine katıldım.\n\nMekanik tasarım aşamasında Blender ağırlıklı olmak üzere 3D tasarım çalışmaları gerçekleştirdim. İhtiyaç duyduğumuz bazı tasarım ve modelleme işlemlerinde Tinkercad de kullandım.\n\nBu proje bana yalnızca yazılım geliştirme değil, bir hava aracının farklı disiplinlerden oluşan sistemlerinin birlikte çalışmasını anlama fırsatı verdi. Özellikle görüntü işleme, elektronik ve mekanik tasarımın aynı proje içerisinde buluşması benim açımdan önemli bir deneyim oldu.",
+    "highlights": [
+      "YOLOv11 ile nesne algılama çalışmaları",
+      "Python ve OpenCV ile görüntü işleme",
+      "Model eğitimi üzerine çalışmalar",
+      "Elektronik sistemlerin genel kablolaması",
+      "Bileşenlerin entegrasyonu ve test süreçleri",
+      "Teknik araştırma ve deneysel çalışmalar",
+      "Blender ile 3D tasarım",
+      "Tinkercad ile modelleme çalışmaları",
+      "Takım içerisinde farklı teknik alanlarda görev alma"
+    ],
+    "tech": [
+      "Python",
+      "YOLOv11",
+      "OpenCV",
+      "Blender",
+      "Tinkercad",
+      "UAV",
+      "Image Processing",
+      "Electronics"
+    ],
+    "image": "",
+    "links": [],
+    "images": [
+      "assets/img/projeIMG/insansiz hava araci.jpeg",
+      "assets/img/projeIMG/siha1.jpeg",
+      "assets/img/projeIMG/siha2.jpeg",
+      "assets/img/projeIMG/siha3.jpeg",
+      "assets/img/projeIMG/siha4.jpeg",
+      "assets/img/projeIMG/siha5.jpeg"
+    ]
+  },
+  {
+    "icon": "fa-solid fa-door-open",
+    "tag": "C++ · Python · Web Automation",
+    "status": "Tamamlandı",
+    "title": "Kapı ve Aydınlatma Otomasyonu",
+    "summary": "Bilgisayar üzerinden klavye komutları, web arayüzü ve Siri ile kapı ve aydınlatma sistemlerini kontrol eden otomasyon altyapısı.",
+    "description": "Bu projede bir şirketin kapı ve aydınlatma sistemlerini uzaktan ve farklı kontrol yöntemleriyle yönetebileceğim bir otomasyon altyapısı geliştirdim. Projenin yazılım tarafını kendim hazırladım ve bilgisayar, web sunucusu ve ESP tabanlı donanım arasında çalışan bir yapı oluşturdum.\n\nDonanım tarafındaki kontrol yazılımını C++ ile geliştirdim. Web arayüzünü ise HTML, CSS ve JavaScript kullanarak hazırladım. Böylece fiziksel sistemlerin web üzerinden kontrol edilebilmesini sağladım.\n\nSistemin önemli parçalarından biri, bilgisayarda arka planda sürekli çalışan Python uygulamasıydı. Bu uygulama belirlediğim F9, F10 ve F11 gibi klavye tuşlarını dinliyor, ilgili tuşa basıldığında web sunucusuna HTTP isteği gönderiyordu. Sunucuya ulaşan istekler de ilgili kapı veya aydınlatma işleminin gerçekleştirilmesini sağlıyordu.\n\nAydınlatma kontrolünde tek ve çift basma gibi farklı komut davranışları oluşturdum. Kapı kontrolünde ise kısa süreli açma, açık tutma ve kapatma gibi farklı çalışma senaryoları geliştirdim. Ayrıca web ve Siri entegrasyonlarını da sisteme dahil ettim.\n\nBu projede özellikle Python ile arka plan uygulaması, HTTP istekleri, web teknolojileri ve mikrodenetleyici yazılımı arasında bağlantı kurarak farklı sistemleri tek bir otomasyon akışında birleştirdim.",
+    "highlights": [
+      "ESP üzerinde C++ ile kontrol yazılımı",
+      "HTML, CSS ve JavaScript ile web arayüzü",
+      "Arka planda sürekli çalışan Python uygulaması",
+      "Klavye tuşlarını algılayan kontrol mekanizması",
+      "HTTP istekleri ile sunucu iletişimi",
+      "Farklı tuş kombinasyonlarıyla aydınlatma kontrolü",
+      "Kapının süreli açılması ve açık tutulması",
+      "Web üzerinden uzaktan kontrol",
+      "Siri entegrasyonu"
+    ],
+    "tech": [
+      "C++",
+      "Python",
+      "HTML",
+      "CSS",
+      "JavaScript",
+      "HTTP",
+      "ESP",
+      "Web Automation",
+      "IoT"
+    ],
+    "image": "",
+    "links": [],
+    "images": [
+      "assets/img/projeIMG/sirket 1.jpeg",
+      "assets/img/projeIMG/sirket 2.jpeg",
+      "assets/img/projeIMG/sirket3.jpeg",
+      "assets/img/projeIMG/WhatsApp Image 2026-11-23 at 15.32.34.jpeg"
+    ]
+  },
+  {
+    "icon": "fa-solid fa-car-side",
+    "tag": "C# · Arduino · Bluetooth",
+    "status": "Tamamlandı",
+    "title": "Bluetooth Kontrollü Robot Araba",
+    "summary": "C# ile geliştirdiğim masaüstü uygulaması üzerinden Bluetooth bağlantısıyla kontrol edilebilen, kamera destekli robot araba.",
+    "description": "Bu projede Arduino ve HC-05 Bluetooth modülünü kullanarak uzaktan kontrol edilebilen bir robot araba geliştirdim. Projenin masaüstü yazılımını C# ve .NET Framework Windows Forms kullanarak kendim hazırladım.\n\nBilgisayar ile Arduino arasındaki iletişimi seri haberleşme üzerinden gerçekleştirdim. C# tarafında SerialPort kullanarak gönderilen komutların Bluetooth bağlantısı üzerinden Arduino’ya ulaşmasını sağladım. Arduino ise aldığı komutları işleyerek motorların hareketlerini kontrol ediyordu.\n\nKontrol uygulamasında hem WASD tuşlarıyla hem de arayüz üzerindeki butonlarla aracı yönlendirebilecek bir yapı oluşturdum. Ayrıca farları açıp kapatma, hız ayarı ve kamera görüntüsünü takip etme gibi özellikleri de uygulamaya ekledim.\n\nKamera tarafında AForge.NET kütüphanesinden yararlandım. Böylece kontrol uygulamasını yalnızca hareket komutlarının gönderildiği bir yazılım olmaktan çıkarıp kamera görüntüsünün de takip edilebildiği bir sisteme dönüştürdüm.\n\nBu projede özellikle C# ile masaüstü uygulama geliştirme, seri haberleşme, Bluetooth iletişimi ve Arduino tabanlı donanım kontrolü konularında çalıştım.",
+    "highlights": [
+      "Bluetooth üzerinden kablosuz kontrol",
+      "Arduino ve HC-05 haberleşmesi",
+      "C# Windows Forms kontrol uygulaması",
+      "WASD tuşlarıyla araç kontrolü",
+      "Arayüz butonlarıyla yönlendirme",
+      "Farları açma ve kapatma",
+      "Hız ayarı için slider kontrolü",
+      "Kamera görüntüsünü uygulama üzerinden takip etme",
+      "SerialPort ile seri haberleşme",
+      "AForge.NET kullanımı"
+    ],
+    "tech": [
+      "C#",
+      ".NET Framework",
+      "Windows Forms",
+      "Arduino",
+      "HC-05",
+      "SerialPort",
+      "AForge.NET",
+      "Bluetooth"
+    ],
+    "image": "",
+    "links": [
+      {
+        "label": "GitHub'da incele",
+        "href": "https://github.com/heisenberg1098/Bluetooth-Kontrollu-Arac-C-"
+      }
+    ],
+    "images": [
+      "assets/img/projeIMG/bluetooth kontrollu arac.jpeg"
+    ]
+  },
+  {
+    "icon": "fa-solid fa-robot",
+    "tag": "AI · Agent · Web",
+    "status": "Aktif geliştirme",
+    "title": "Web AI Agent",
+    "summary": "Yapay zekâ servislerinden yararlanarak web üzerinde görev gerçekleştirebilen bir ajan geliştirme çalışması.",
+    "description": "Bu projede yapay zekâ servislerini web teknolojileriyle bir araya getirerek web üzerinde belirli görevleri gerçekleştirebilen bir AI Agent geliştiriyorum.\n\nAmacım yalnızca kullanıcının sorularına yanıt veren bir sistem oluşturmak değil, verilen talimatları anlayabilen ve bu talimatlar doğrultusunda web üzerinde işlem yapabilen bir yapı geliştirmek.\n\nProje üzerinde yapay zekâ servislerinin entegrasyonu, görevlerin yönetilmesi ve web ortamındaki işlemlerin otomatikleştirilmesi üzerine çalışıyorum.",
+    "highlights": [
+      "Yapay zekâ servislerinin entegrasyonu",
+      "Web tabanlı görev yönetimi",
+      "Talimatları işleyebilen agent altyapısı",
+      "Web işlemlerinin otomatikleştirilmesi"
+    ],
+    "tech": [
+      "AI",
+      "Agent",
+      "Web",
+      "Automation"
+    ],
+    "image": "",
+    "links": [
+      {
+        "label": "GitHub'da incele",
+        "href": "https://github.com/heisenberg1098/Web_Agent"
+      }
+    ],
+    "images": [
+      "assets/img/yapayZekaimg.png"
+    ]
+  },
+  {
+    "icon": "fa-solid fa-lightbulb",
+    "tag": "ESP32 · Electronics · IoT",
+    "status": "Tamamlandı",
+    "title": "Masa Üstü Polis Çakarı",
+    "summary": "ESP32 ve röleler kullanarak farklı yanıp sönme modlarına sahip, web ve Siri üzerinden kontrol edilebilen ışık sistemi.",
+    "description": "Bu projeyi masaüstümde kullanmak amacıyla geliştirdiğim küçük bir elektronik otomasyon çalışması olarak tasarladım. ESP32 ve röleler kullanarak birden fazla ışığın farklı yanıp sönme senaryolarıyla çalışmasını sağladım.\n\nSistemde ışıkların sırayla yanıp sönmesi, bir ışık açıkken diğerinin kapalı kalması ve farklı flaş düzenlerinin oluşturulması gibi çalışma modları bulunuyor.\n\nDonanımın kontrolünü ESP32 üzerinden gerçekleştirdim. Ayrıca sistemi yalnızca fiziksel olarak kontrol edilen bir düzenek olarak bırakmayıp web arayüzü ve Siri entegrasyonu ile uzaktan yönetilebilir hâle getirdim.\n\nKüçük ölçekli bir proje olmasına rağmen mikrodenetleyici, röle kontrolü ve otomasyon mantığını bir araya getiren uygulamalı bir çalışma oldu.",
+    "highlights": [
+      "ESP32 tabanlı kontrol sistemi",
+      "Rölelerle ışık kontrolü",
+      "Alternatif yanıp sönme modları",
+      "Sıralı ışık kontrolü",
+      "Web üzerinden kontrol",
+      "Siri entegrasyonu"
+    ],
+    "tech": [
+      "ESP32",
+      "Relay",
+      "Electronics",
+      "IoT",
+      "Web Control",
+      "Siri"
+    ],
+    "image": "",
+    "links": [],
+    "images": [
+      "assets/img/projeIMG/kirmizi mavi isik.jpeg"
+    ]
+  }
+];
+
+  function init() {
+    const list = document.getElementById('focusProjectList');
+    const modal = document.getElementById('focusProjectModal');
+    const closeButton = modal?.querySelector('.focus-project-close');
+    const backdrop = modal?.querySelector('.focus-project-backdrop');
+    if (!list || !modal || !closeButton || !backdrop) return;
+
+    const image = document.getElementById('focusModalImage');
+    const imageEmpty = document.getElementById('focusModalImageEmpty');
+    const imageIcon = document.getElementById('focusModalIcon');
+    const imagePrevious = document.getElementById('focusGalleryPrevious');
+    const imageNext = document.getElementById('focusGalleryNext');
+    const imageCount = document.getElementById('focusGalleryCount');
+    const tag = document.getElementById('focusModalTag');
+    const status = document.getElementById('focusModalStatus');
+    const title = document.getElementById('focusModalTitle');
+    const description = document.getElementById('focusModalDescription');
+    const highlightsWrap = document.getElementById('focusModalHighlightsWrap');
+    const highlights = document.getElementById('focusModalHighlights');
+    const techList = document.getElementById('focusModalTech');
+    const links = document.getElementById('focusModalLinks');
+    const projectCount = document.getElementById('focusModalProjectCount');
+    const projectPrevious = document.getElementById('focusModalPrevious');
+    const projectNext = document.getElementById('focusModalNext');
+    let lastTrigger = null;
+    let previousOverflow = '';
+    let currentProject = 0;
+    let currentImage = 0;
+
+    projects.forEach((project, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'focus-project-item';
+      button.setAttribute('aria-haspopup', 'dialog');
+      button.setAttribute('aria-label', `${project.title} proje ayrıntılarını aç`);
+
+      const icon = document.createElement('span');
+      icon.className = 'focus-project-list-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      const iconElement = document.createElement('i');
+      iconElement.className = project.icon;
+      icon.appendChild(iconElement);
+
+      const content = document.createElement('span');
+      content.className = 'focus-project-list-content';
+      const label = document.createElement('span');
+      label.className = 'focus-project-label';
+      label.textContent = project.tag;
+
+      const projectTitle = document.createElement('span');
+      projectTitle.className = 'focus-project-title';
+      projectTitle.textContent = project.title;
+
+      const summary = document.createElement('span');
+      summary.className = 'focus-project-summary';
+      summary.textContent = project.summary;
+
+      content.append(label, projectTitle, summary);
+      const arrow = document.createElement('span');
+      arrow.className = 'focus-project-list-arrow';
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.innerHTML = '<i class="fas fa-arrow-right"></i>';
+      button.append(icon, content, arrow);
+      button.addEventListener('click', () => open(index, button));
+      list.appendChild(button);
+    });
+
+    function showImage() {
+      const project = projects[currentProject];
+      const images = project.images || [];
+      const hasImages = images.length > 0;
+      image.hidden = !hasImages;
+      imageEmpty.hidden = hasImages;
+      imageIcon.className = project.icon;
+      imagePrevious.hidden = images.length < 2;
+      imageNext.hidden = images.length < 2;
+      imageCount.hidden = images.length < 2;
+
+      if (!hasImages) {
+        image.removeAttribute('src');
+        image.alt = '';
+        return;
+      }
+
+      currentImage = (currentImage + images.length) % images.length;
+      image.src = images[currentImage];
+      image.alt = `${project.title} — görsel ${currentImage + 1}`;
+      imageCount.textContent = `${currentImage + 1} / ${images.length}`;
+    }
+
+    function fillProject(index) {
+      currentProject = (index + projects.length) % projects.length;
+      currentImage = 0;
+      const project = projects[currentProject];
+
+      tag.textContent = project.tag;
+      status.textContent = project.status;
+      title.textContent = project.title;
+      description.textContent = project.description;
+
+      highlights.replaceChildren(...(project.highlights || []).map(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        return li;
+      }));
+      highlightsWrap.hidden = !project.highlights?.length;
+
+      techList.replaceChildren(...project.tech.map(tech => {
+        const pill = document.createElement('span');
+        pill.className = 'focus-project-tech';
+        pill.textContent = tech;
+        return pill;
+      }));
+
+      links.replaceChildren(...project.links.map(link => {
+        const anchor = document.createElement('a');
+        anchor.className = 'focus-project-link';
+        anchor.href = link.href;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        anchor.textContent = link.label;
+        const externalIcon = document.createElement('i');
+        externalIcon.className = 'fas fa-arrow-up-right-from-square';
+        externalIcon.setAttribute('aria-hidden', 'true');
+        anchor.appendChild(externalIcon);
+        return anchor;
+      }));
+      projectCount.textContent = `${currentProject + 1} / ${projects.length}`;
+      showImage();
+      modal.querySelector('.focus-project-dialog').scrollTop = 0;
+    }
+
+    function open(index, trigger) {
+      lastTrigger = trigger;
+      previousOverflow = document.body.style.overflow;
+      fillProject(index);
+
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!modal.classList.contains('is-open')) return;
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = previousOverflow;
+      lastTrigger?.focus();
+    }
+
+    function stepProject(direction) {
+      fillProject(currentProject + direction);
+    }
+
+    function stepImage(direction) {
+      const imageTotal = projects[currentProject].images?.length || 0;
+      if (imageTotal < 2) return;
+      currentImage = (currentImage + direction + imageTotal) % imageTotal;
+      showImage();
+    }
+
+    closeButton.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+    projectPrevious.addEventListener('click', () => stepProject(-1));
+    projectNext.addEventListener('click', () => stepProject(1));
+    imagePrevious.addEventListener('click', () => stepImage(-1));
+    imageNext.addEventListener('click', () => stepImage(1));
+    document.addEventListener('keydown', event => {
+      if (!modal.classList.contains('is-open')) return;
+      if (event.key === 'Escape') return close();
+      if (event.key === 'ArrowLeft') return stepProject(-1);
+      if (event.key === 'ArrowRight') return stepProject(1);
+      if (event.key !== 'Tab') return;
+
+      const focusable = [...modal.querySelectorAll('button:not([hidden]), a[href]')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  return { init };
+})();
+
+const AchievementDetails = (() => {
+  function init() {
+    const modal = document.getElementById('achievementDetailModal');
+    const trigger = document.querySelector('[data-achievement-detail]');
+    const closeButton = modal?.querySelector('.focus-project-close');
+    const backdrop = modal?.querySelector('.focus-project-backdrop');
+    const dialog = modal?.querySelector('.focus-project-dialog');
+    if (!modal || !trigger || !closeButton || !backdrop || !dialog) return;
+
+    let lastTrigger = null;
+    let previousOverflow = '';
+
+    function open() {
+      lastTrigger = document.activeElement;
+      previousOverflow = document.body.style.overflow;
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!modal.classList.contains('is-open')) return;
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = previousOverflow;
+      lastTrigger?.focus();
+    }
+
+    trigger.addEventListener('click', open);
+    modal.querySelectorAll('[data-achievement-close]').forEach(element => {
+      element.addEventListener('click', close);
+    });
+    document.addEventListener('keydown', event => {
+      if (!modal.classList.contains('is-open')) return;
+      if (event.key === 'Escape') return close();
+      if (event.key !== 'Tab') return;
+
+      const focusable = [...modal.querySelectorAll('button:not([hidden]), a[href]')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  return { init };
+})();
+
+// ─── 17. INIT ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   ThemeManager.init();
   SidebarManager.init();
@@ -1062,6 +1670,8 @@ document.addEventListener('DOMContentLoaded', () => {
   AnimationManager.init();
   AnimationManager.animateSkills();
   OfflineManager.init();
+  FocusProjects.init();
+  AchievementDetails.init();
 
   WebsiteLoader.load();
   BilgilendirmeLoader.load();
@@ -1072,9 +1682,10 @@ document.addEventListener('DOMContentLoaded', () => {
   BrandingAnimation.init();
   Analytics.init();
 
-  const pSifre = document.getElementById('pSifre');
-  if (pSifre) pSifre.addEventListener('keydown', e => {
-    if (e.key === 'Enter') adminGirisKontrol();
+  ['adminEmail', 'pSifre'].forEach(id => {
+    document.getElementById(id)?.addEventListener('keydown', event => {
+      if (event.key === 'Enter') adminGirisKontrol();
+    });
   });
 
   document.addEventListener('keydown', e => {
@@ -1086,16 +1697,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-var yaysite = document.getElementById("yayınlanmissite");
-db.collection("websiteler").where("isPublished", "==", true).get().then((querySnapshot) => {
-  const count = querySnapshot.size;
-  yaysite.innerHTML = count;
-});
+function updateStat(id, value) {
+  const stat = document.getElementById(id);
+  if (!stat) return;
+  stat.textContent = value;
+  const card = stat.closest('.stat-card');
+  if (card) card.setAttribute('aria-busy', 'false');
+}
 
-var sitegor = document.getElementById("sitegoruntulenme");
 db.collection("websiteler").where("isPublished", "==", true).get().then((querySnapshot) => {
-  const count = querySnapshot.docs.reduce((total, doc) => total + (doc.data().views || 0), 0);
-  sitegor.innerHTML = count;
+  updateStat("yayınlanmissite", querySnapshot.size);
+  const totalViews = querySnapshot.docs.reduce((total, doc) => {
+    const views = Number(doc.data().views);
+    return total + (Number.isFinite(views) ? views : 0);
+  }, 0);
+  updateStat("sitegoruntulenme", totalViews);
+}).catch((error) => {
+  console.error("Site sayaçları yüklenirken hata:", error);
+  updateStat("yayınlanmissite", "—");
+  updateStat("sitegoruntulenme", "—");
 });
 
 
@@ -1112,6 +1732,7 @@ const BilgilendirmeLoader = (() => {
       let htmlIcerik = ""; 
 
       const el = id => document.getElementById(id);
+      updateStat("bilgilendirme", snapshot.size);
 
       // Veri yoksa yapılacaklar
       if (snapshot.empty) {
@@ -1143,6 +1764,10 @@ const BilgilendirmeLoader = (() => {
 
       BilgiGor.innerHTML = htmlIcerik;
 
+    }, error => {
+      console.error("Bilgilendirme verileri yüklenirken hata:", error);
+      updateStat("bilgilendirme", "—");
+      BilgiGor.innerHTML = '<p style="color:var(--c-text-2); font-size:1.4rem; text-align:center; padding: 2rem;">Bilgilendirme içerikleri şu anda yüklenemiyor.</p>';
     });
   }
 
